@@ -1,0 +1,440 @@
+@model BoardGameFontier.Models.ViewModels.PostDetailViewModel
+@using System.Linq
+@using Microsoft.AspNetCore.Http.Extensions
+@{
+    // 留言資料準備
+    var commentsList = new List<object>();
+    if (Model?.Comments != null)
+    {
+        foreach (var c in Model.Comments)
+        {
+            commentsList.Add(new
+            {
+                id = c.Id,
+                content = c.Content,
+                createdAt = c.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"),
+                likeCount = c.LikeCount,
+                isLikedByCurrentUser = c.IsLikedByCurrentUser,
+                author = new
+                {
+                    id = c.Author?.Id ?? "",
+                    userName = c.Author?.UserName ?? "",
+                    displayName = c.Author?.DisplayName ?? c.Author?.UserName ?? "匿名用戶",
+                    profilePictureUrl = c.Author?.ProfilePictureUrl ?? ""
+                }
+            });
+        }
+    }
+    var commentsJson = System.Text.Json.JsonSerializer.Serialize(commentsList);
+
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<link href="~/css/components/postdetailpanel.css" rel="stylesheet" asp-append-version="true" />
+
+<div class="post-detail-panel" id="postDetailPanel">
+    <div class="post-detail-header">
+        <button class="btn btn-outline-primary btn-sm" id="backToListBtn" onclick="window.vueApp.returnToListView()">
+            <i class="bi bi-arrow-left"></i> 返回列表
+        </button>
+        <div class="post-breadcrumb">
+            <span class="text-muted">社群討論</span>
+            <i class="bi bi-chevron-right mx-2 text-muted"></i>
+            <span class="text-primary" id="postBreadcrumbTitle">@(Model?.Post?.Title ?? "貼文詳情")</span>
+        </div>
+    </div>
+
+    <div class="post-content-container" id="postContentContainer">
+        @if (Model != null)
+        {
+            <div class="bg-white rounded-3 p-4 shadow-sm mb-1">
+                <!-- 標題 + 作者追蹤 -->
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h1 class="h4 mb-0 text-primary flex-grow-1">@(Model.Post?.Title ?? "無標題")</h1>
+                    @* 追蹤按鈕 - 僅在登入且非作者時顯示 *@
+                    @if (User.Identity != null && User.Identity.IsAuthenticated &&
+                                    User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value != Model.Post?.Author?.Id)
+                    {
+                        <div class="follow-btn-container ms-3">
+                            <button class="follow-btn @(Model.Post?.Author?.IsFollowed == true ? "followed" : "")"
+                                    data-author-id="@(Model.Post?.Author?.Id ?? "")"
+                                    data-followed="@(Model.Post?.Author?.IsFollowed == true ? "true" : "false")"
+                                    onclick="window.handleDetailPageFollowToggle && window.handleDetailPageFollowToggle('@(Model.Post?.Author?.Id ?? "")', this.dataset.followed)">
+                                <i class="bi @(Model.Post?.Author?.IsFollowed == true ? "bi-person-check-fill" : "bi-person-plus")"></i>
+                                <span class="follow-text">@(Model.Post?.Author?.IsFollowed == true ? "已追蹤" : "追蹤")</span>
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <!-- 作者資訊 -->
+                <div class="d-flex align-items-center mb-3">
+                    <div class="author-avatar me-3" onclick="window.open('/Member/PlayerProfile/@(Model.Post?.Author?.Id ?? "")', '_blank')">
+                        @if (!string.IsNullOrEmpty(Model.Post?.Author?.AvatarUrl))
+                        {
+                            <img src="@Model.Post.Author.AvatarUrl"
+                                 alt="@(Model.Post.Author.DisplayName ?? Model.Post.Author.UserName ?? "匿名用戶")"
+                                 class="author-avatar-img" />
+                        }
+                        else
+                        {
+                            <div class="author-avatar-placeholder">
+                                <i class="bi bi-person-circle text-white"></i>
+                            </div>
+                        }
+                    </div>
+                    <div class="author-info flex-grow-1">
+                        <div class="author-name">
+                            <strong class="text-primary author-link"
+                                    onclick="window.open('/Member/PlayerProfile/@(Model.Post?.Author?.Id ?? "")', '_blank')">
+                                @(Model.Post?.Author?.DisplayName ?? Model.Post?.Author?.UserName ?? "匿名用戶")
+                            </strong>
+                            @if (Model.Post?.Author?.IsVerified == true)
+                            {
+                                <i class="bi bi-patch-check-fill text-success ms-1" title="驗證用戶"></i>
+                            }
+                        </div>
+                        <div class="post-meta text-muted small">
+                            <i class="bi bi-clock me-1"></i>
+                            @(Model.Post?.Time?.CreatedAt.ToString("yyyy/MM/dd HH:mm") ?? "")
+                            @if (Model.Post?.Time?.IsEdited == true)
+                            {
+                                <span class="ms-2"><i class="bi bi-pencil-square me-1"></i>(已編輯)</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 內容 -->
+                <div class="post-content">
+                    @Html.Raw(Model.Post?.Content?.Replace("\n", "<br>") ?? "無內容")
+                </div>
+
+                <!-- 交易資訊區域（僅交易類型貼文顯示） -->
+                @if (Model.Post?.TradeInfo != null)
+                {
+                    <div class="trade-info-section mt-4 p-3 bg-light border rounded">
+                        <h6 class="trade-info-title mb-3">
+                            <i class="bi bi-currency-exchange text-success me-2"></i>
+                            <span class="text-success">交易資訊</span>
+                        </h6>
+                        <div class="row">
+                            @if (Model.Post.TradeInfo.Price.HasValue)
+                            {
+                                <div class="col-md-4 mb-2">
+                                    <div class="trade-item">
+                                        <i class="bi bi-tag-fill text-primary me-2"></i>
+                                        <strong>交易價格：</strong>
+                                        <span class="trade-price fw-bold fs-5">
+                                            @Model.Post.TradeInfo.Currency@Model.Post.TradeInfo.Price.Value.ToString("N0")
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Post.TradeInfo.Location))
+                            {
+                                <div class="col-md-4 mb-2">
+                                    <div class="trade-item">
+                                        <i class="bi bi-geo-alt-fill text-warning me-2"></i>
+                                        <strong>交易地點：</strong>
+                                        <span class="trade-location">@Model.Post.TradeInfo.Location</span>
+                                    </div>
+                                </div>
+                            }
+                            <div class="col-md-4 mb-2">
+                                <div class="trade-item">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <strong>交易狀態：</strong>
+                                    <span class="badge @(Model.Post.TradeInfo.Status == TradeStatus.Available ? "bg-success" : 
+                                                       Model.Post.TradeInfo.Status == TradeStatus.InProgress ? "bg-warning" : 
+                                                       Model.Post.TradeInfo.Status == TradeStatus.Sold ? "bg-danger" : "bg-secondary")">
+                                        @(Model.Post.TradeInfo.Status == TradeStatus.Available ? "可交易" : 
+                                          Model.Post.TradeInfo.Status == TradeStatus.InProgress ? "交易中" : 
+                                          Model.Post.TradeInfo.Status == TradeStatus.Sold ? "已售出" : "已下架")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Post.TradeInfo.Notes))
+                        {
+                            <div class="trade-notes mt-3">
+                                <i class="bi bi-chat-square-text text-info me-2"></i>
+                                <strong>交易備註：</strong>
+                                <div class="mt-2 p-2 bg-white border rounded small">
+                                    @Html.Raw(Model.Post.TradeInfo.Notes.Replace("\n", "<br>"))
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- 圖片區域 -->
+                @if (Model.Post.ImageUrls != null && Model.Post.ImageUrls.Any())
+                {
+                    <div class="post-images mt-3 mb-3">
+                        @foreach (var (imageUrl, index) in Model.Post.ImageUrls.Select((url, i) => (url, i)))
+                        {
+                            <div class="post-image-wrapper mb-2"> <!-- 使用新的 wrapper class -->
+                                <div class="post-image-container">
+                                    <img src="@imageUrl" 
+                                         alt="貼文圖片" 
+                                         class="post-image img-fluid"
+                                         data-images-json='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Post.ImageUrls))'
+                                         onclick="openImageModalFromElement(this, @index)"
+                                         onerror="this.style.display='none'"
+                                         role="button"
+                                         tabindex="0">
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- 操作區 -->
+                <div class="post-actions mt-4 pt-3 border-top">
+                    <div class="d-flex align-items-center justify-content-between w-100">
+                        <div class="d-flex align-items-center gap-4">
+                            <!-- 按讚 -->
+                            <button class="post-action like-btn @(Model.Post?.IsLikedByCurrentUser == true ? "liked" : "")"
+                                    data-post-id="@(Model.Post?.Id ?? 0)"
+                                    onclick="togglePostDetailLike(@(Model.Post?.Id ?? 0))"
+                                    title="按讚">
+                                <i class="post-action-icon @(Model.Post?.IsLikedByCurrentUser == true ? "bi bi-heart-fill" : "bi bi-heart")"></i>
+                                <span class="post-action-count">@(Model.Post?.Stats?.LikeCount ?? 0)</span>
+                                <span class="action-text">讚</span>
+                            </button>
+
+                            <!-- 留言 -->
+                            <button class="post-action comment-btn" onclick="expandComments()" title="查看留言">
+                                <i class="post-action-icon bi bi-chat-dots"></i>
+                                <span class="post-action-count">@(Model.Comments?.Count ?? 0)</span>
+                                <span class="action-text">留言</span>
+                            </button>
+
+                            <!-- 分享 -->
+                            <button class="post-action share-btn" onclick="sharePost(@(Model.Post?.Id ?? 0))" title="分享文章">
+                                <i class="post-action-icon bi bi-share"></i>
+                                <span class="action-text">分享</span>
+                            </button>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- 刪除貼文（作者或 Admin） -->
+                            @if (User.Identity != null && User.Identity.IsAuthenticated &&
+                                                    (User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.Post?.Author?.Id || isAdmin))
+                            {
+                                <button class="post-action delete-btn text-danger"
+                                        onclick="deletePost(@(Model.Post?.Id ?? 0))"
+                                        title="刪除貼文">
+                                    <i class="post-action-icon bi bi-trash"></i>
+                                    <span class="action-text">刪除</span>
+                                </button>
+                            }
+
+                            <!-- 檢舉貼文 -->
+                            <div v-if="canReportPost()">
+                                <button class="post-action violation-btn" @@click="openReport('Post', postId)" title="檢舉貼文">
+                                    <i class="post-action-icon bi bi-flag-fill"></i>
+                                    <span class="action-text">檢舉</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- 留言區 -->
+                <div id="commentSection"
+                     data-post-id="@(Model?.Post?.Id ?? 0)"
+                     data-current-user-id="@currentUserId"
+                     data-post-author-id="@(Model.Post?.Author?.Id ?? "")"
+                     data-is-authenticated="@(User.Identity?.IsAuthenticated ?? false)"
+                     data-is-admin="@(isAdmin)"
+                     data-initial-comments='@Html.Raw(commentsJson)'>
+
+                    <!-- 留言 header + 新增按鈕 -->
+                    <div class="comments-header mb-3 d-flex align-items-center justify-content-between" @@click="toggleCommentsCollapse" style="cursor: pointer;">
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0 d-flex align-items-center">
+                                <i class="bi bi-chat-dots me-2"></i>
+                                留言 ({{ comments.length }})
+                                <i :class="['ms-2', 'collapse-icon', isCommentsCollapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-down']"
+                                   style="font-size: 14px; transition: transform 0.3s ease;"></i>
+                            </h5>
+                        </div>
+                        <div v-if="isAuthenticated" class="ms-3">
+                            <button @@click="openCommentModal" class="btn btn-primary btn-sm" type="button">
+                                <i class="bi bi-plus-circle me-1"></i>
+                                發表留言
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 留言列表 -->
+                    <div v-if="comments.length > 0" v-show="!isCommentsCollapsed" class="comments-list">
+                        <div v-for="comment in comments" :key="comment.id" class="comment-item mb-3 p-3 bg-light rounded">
+                            <div class="comment-author-info d-flex align-items-center mb-2">
+                                <div class="comment-avatar me-2" @@click="openCommentAuthorProfile(comment.author.id)" style="cursor: pointer;">
+                                    <img v-if="comment.author.profilePictureUrl"
+                                         :src="comment.author.profilePictureUrl"
+                                         :alt="comment.author.displayName"
+                                         class="comment-avatar-img" />
+                                    <div v-else class="comment-avatar-placeholder">
+                                        <i class="bi bi-person-circle" style="font-size: 40px;"></i>
+                                    </div>
+                                </div>
+                                <div class="comment-author-details flex-grow-1">
+                                    <strong>{{ comment.author.displayName }}</strong>
+                                    <div class="comment-time">
+                                        <small class="text-muted">{{ formatDate(comment.createdAt) }}</small>
+                                    </div>
+                                </div>
+                                <!-- 檢舉留言 -->
+                                <div class="ms-auto" v-if="canReportComment(comment)">
+                                    <button class="post-action violation-btn" @@click="openReport('Comment', comment.id)" title="檢舉此留言">
+                                        <i class="post-action-icon bi bi-flag"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 留言內容 -->
+                            <div class="comment-content mb-2" v-html="comment.content.replace(/\n/g, '<br>')"></div>
+
+                            <!-- 留言操作 -->
+                            <div class="comment-actions d-flex align-items-center justify-content-between">
+                                <button @@click="toggleLike(comment)"
+                                        :class="['post-action', 'like-btn', { 'liked': comment.isLikedByCurrentUser }]"
+                                        v-bind:disabled="comment.isProcessing">
+                                    <i :class="['post-action-icon', comment.isLikedByCurrentUser ? 'bi-heart-fill' : 'bi-heart']"></i>
+                                    <span class="post-action-count">{{ comment.likeCount }}</span>
+                                    <span class="action-text">讚</span>
+                                </button>
+
+                                <button v-if="canDeleteComment(comment)"
+                                        @@click="deleteComment(comment.id)"
+                                        class="post-action delete-btn text-danger">
+                                    <i class="post-action-icon bi bi-trash"></i>
+                                    <span class="action-text">刪除</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 無留言提示 -->
+                    <div v-else v-show="!isCommentsCollapsed" class="text-center py-4 text-muted">
+                        <i class="bi bi-chat-dots" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">還沒有留言</p>
+                        <div v-if="isAuthenticated" class="mt-3">
+                            <button @@click="openCommentModal" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-circle me-1"></i>
+                                成為第一個留言的人
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 未登入提示 -->
+                    <div v-if="!isAuthenticated" v-show="!isCommentsCollapsed" class="add-comment-section mt-4 pt-4 border-top text-center">
+                        <div class="text-muted">
+                            <i class="bi bi-person-plus" style="font-size: 1.5rem;"></i>
+                            <p class="mt-2 mb-3">登入後即可發表留言</p>
+                            <a href="/Login/IndexLogin" class="btn btn-primary btn-sm">
+                                <i class="bi bi-box-arrow-in-right"></i> 立即登入
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 留言模態窗 -->
+                    <div class="modal fade" :id="modalId" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title"><i class="bi bi-chat-text me-2"></i>發表留言</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form @@submit="submitComment">
+                                        <div class="mb-3">
+                                            <label class="form-label" :for="'commentTextarea_' + postId">
+                                                <i class="bi bi-pencil-square me-1"></i>留言內容
+                                            </label>
+                                            <textarea v-model="newComment"
+                                                  :id="'commentTextarea_' + postId"
+                                                  class="form-control"
+                                                  rows="4"
+                                                  placeholder="分享您的想法、問題或建議..."
+                                                  maxlength="1000"
+                                                  required></textarea>
+                                            <div class="form-text d-flex justify-content-between">
+                                                <span class="text-muted">請保持友善與尊重的討論氛圍</span>
+                                                <span :class="newComment.length > 900 ? 'text-danger' : 'text-muted'">{{ newComment.length }}/1000 字</span>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-circle me-1"></i>取消
+                                    </button>
+                                    <button type="button" @@click="clearComment" class="btn btn-outline-warning me-2"
+                                            v-bind:disabled="!newComment || !newComment.trim()">
+                                        <i class="bi bi-arrow-clockwise me-1"></i>清除
+                                    </button>
+                                    <button type="button" @@click="submitComment" class="btn btn-primary"
+                                            v-bind:disabled="isSubmitting || !newComment || !newComment.trim()">
+                                        <i class="bi bi-hourglass-split me-1" v-if="isSubmitting"></i>
+                                        <i class="bi bi-send me-1" v-else></i>
+                                        {{ isSubmitting ? '發表中...' : '發表留言' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">載入失敗</h5>
+                <p>Model 為空</p>
+            </div>
+            <div id="commentSection"
+                 data-post-id="0"
+                 data-current-user-id="@currentUserId"
+                 data-post-author-id=""
+                 data-is-authenticated="@(User.Identity?.IsAuthenticated ?? false)"
+                 data-is-admin="@(isAdmin)"
+                 data-initial-comments='[]'>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- 圖片預覽模態框 -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">圖片預覽</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" src="" alt="預覽圖片" class="img-fluid" style="max-height: 70vh;">
+                <div class="mt-3" id="imageNavigation" style="display: none;">
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="previousImage()">
+                        <i class="bi bi-chevron-left"></i> 上一張
+                    </button>
+                    <span id="imageCounter" class="mx-3"></span>
+                    <button type="button" class="btn btn-outline-primary ms-2" onclick="nextImage()">
+                        下一張 <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

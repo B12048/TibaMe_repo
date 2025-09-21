@@ -1,0 +1,101 @@
+﻿@model BoardGameFontier.Repostiory.Entity.UserProfile
+
+<div class="section">
+    <h4>交易紀錄</h4>
+
+        @if (Model == null)
+        {
+            <p class="text-danger">目前無交易紀錄。</p>
+        }
+    else
+    {
+    <!--  買家身分的交易紀錄 -->
+        <h5 class="mt-4">我買的商品</h5>
+        @if (Model.BoughtTransactions == null || !Model.BoughtTransactions.Any())
+        {
+            <p class="text-muted">你還沒有以買家身份完成的交易。</p>
+        }
+        else
+        {
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>交易編號</th>
+                        <th>商品名稱</th>
+                        <th>金額</th>
+                        <th>狀態</th>
+                        <th>評價</th>
+                        <th>日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.BoughtTransactions.OrderByDescending(t => t.CreatedAt))
+                    {
+                        <tr>
+                            <td>@t.TransactionNumber</td>
+                            <td>@t.TradeItemName</td>
+                            <td>$@t.Amount.ToString("N0")</td>
+                            <td>@t.Status</td>
+                            <td>
+                                @if (t.BuyerRating.HasValue)
+                                {
+                                    <span class="text-warning">@($"{t.BuyerRating}★")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">尚未評價</span>
+                                }
+                            </td>
+                            <td>@t.CreatedAt.ToString("yyyy/MM/dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <!-- 賣家身分的交易紀錄 -->
+        <h5 class="mt-5">我賣的商品</h5>
+        @if (Model.SoldTransactions == null || !Model.SoldTransactions.Any())
+        {
+            <p class="text-muted">你還沒有以賣家身份完成的交易。</p>
+        }
+        else
+        {
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>交易編號</th>
+                        <th>商品名稱</th>
+                        <th>金額</th>
+                        <th>狀態</th>
+                        <th>評價</th>
+                        <th>日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.SoldTransactions.OrderByDescending(t => t.CreatedAt))
+                    {
+                        <tr>
+                            <td>@t.TransactionNumber</td>
+                            <td>@t.TradeItemName</td>
+                            <td>$@t.Amount.ToString("N0")</td>
+                            <td>@t.Status</td>
+                            <td>
+                                @if (t.SellerRating.HasValue)
+                                {
+                                    <span class="text-success">@($"{t.SellerRating}★")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">尚未評價</span>
+                                }
+                            </td>
+                            <td>@t.CreatedAt.ToString("yyyy/MM/dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+</div>
+

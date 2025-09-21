@@ -1,0 +1,499 @@
+﻿@{
+    ViewData["Title"] = "桌遊開拓站";
+}
+@section Styles {
+    <style>
+
+        /*網站的綠色色碼 #78c2ad */
+        @@keyframes reelProgressAnim {
+            from {
+                width: 0%;
+            }
+
+            to {
+                width: 100%;
+            }
+        }
+
+        #reelProgress.animate {
+            animation: reelProgressAnim 6s linear forwards;
+        }
+
+        .newsection {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: rgba(20, 184, 166, 0.2) solid 0.5px;
+        }
+
+        .list-group a {
+            padding: 5px;
+            text-decoration: none;
+            display: flex;
+            height: 12vh;
+            align-items: center;
+            color: white;
+        }
+
+        li{
+            cursor:pointer;
+        }
+        .cover {
+            width: 10vh;
+            overflow: hidden;
+            border-radius: 10%;
+            margin-left: 10px;
+        }
+
+        .news-img {
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .news-card {
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .news-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .newsTitle {
+            padding-left: 10px;
+            font-size: clamp(10px, 3vh, 20px);
+            color: #0f2419;
+        }
+
+        .carousel {
+            position: relative;
+        }
+
+        .secTop {
+            min-height: 40vh;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+
+        .card-text {
+            line-height: 1.5;
+        }
+
+        .card-item{
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: rgba(20, 184, 166, 0.2) solid 0.5px;
+        }
+
+        .product-scroll-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 1rem 0;
+        }
+
+        .product-row {
+            display: flex;
+            gap: 1rem;
+            padding: 0 1rem;
+        }
+
+        .product-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 0.5rem;
+            flex: 0 0 auto;
+            width: 18rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+
+        .product-body {
+            padding: 1rem;
+        }
+
+        .product-body h5 {
+            margin-bottom: 0.5rem;
+        }
+
+        .product-scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .product-scroll-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .scroll-btn {
+            position: absolute;
+            top: -12px;
+            transform: translateY(-50%);
+            background: rgba(20, 184, 166, 0.5);
+            border: none;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 900;
+            height: 3rem;
+            cursor: pointer;
+            z-index: 10;
+            width: 3rem;
+            border-radius: 7px;
+            display: flex;
+            justify-content: center; /* 水平置中 */
+            align-items: center; /* 垂直置中 */
+        }
+
+        h2.text-danger.pt-3 {
+            font-weight: bold;
+            margin: 1vh;
+        }
+        .scroll-btn.left {
+            right: 4rem;
+        }
+
+        .scroll-btn.right {
+            right: 0.5rem;
+        }
+
+        .scroll-btn:hover {
+                background: rgba(20, 184, 166,0.7);
+        }
+
+        .card-img-top-container {
+            width: 100%;
+            aspect-ratio: 1 / 1; /* 固定比例，例如16:9 */
+            overflow: hidden;
+        }
+
+            .card-img-top-container img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover; /* 確保圖片不變形且填滿 */
+            }
+    </style>
+}
+
+<div class="container-lg">
+    <div class="row mt-3">
+        <!---左側欄開始--->
+        <div class="col-3">
+            <partial name="~/Views/Shared/Partials/_CommunityLeftSidebar.cshtml" />
+        </div>
+        <!---左側欄結束--->
+        <div id="wrapperApp" class="col-9">
+            <div id="carouselExampleFade" class="carousel slide carousel-fade">
+                <div class="carousel-inner">
+                    <div class="carousel-item" :class="{ active: index === 0 }" v-for="(item, index) in merchandises" :key="item.id">
+                        <img :src="item.indexBannerURL" class="d-block w-100" alt="item.zhtName.">
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+            <div class="newsection container my-4">
+                <!-- 分類 Tabs -->
+                <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item">
+                        <a class="nav-link" :class="{ active: activeTab === 'all' }" @@click="switchTab('all')">綜合報導</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" :class="{ active: activeTab === 'news' }" @@click="switchTab('news')">遊戲趣聞</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" :class="{ active: activeTab === 'game' }" @@click="switchTab('game')">新品速報</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" :class="{ active: activeTab === 'campaign' }" @@click="switchTab('campaign')">實體活動</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" :class="{ active: activeTab === 'announcement' }" @@click="switchTab('announcement')">系統公告</a>
+                    </li>
+                </ul>
+                <!-- 新聞列表 -->
+            <div class="row g-3">
+                <template v-if="newsIsLoading">
+                    <div v-for="i in 6"  class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm border-0 news-card">
+                            <!-- 圖片 -->
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">讀取中...</span>
+                            </div>
+                            <!-- 內容 -->
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <span class="badge rounded-pill bg-primary me-2">
+                                    </span>
+                                <small class="text-muted placeholder-glow"><span class="placeholder col-7"></span></small>
+                                </div>
+                                <h5 class="card-title placeholder-glow">
+                                    <span class="placeholder col-6"></span>
+                                </h5>
+                                <p class="card-text placeholder-glow" >
+                                    <span class="placeholder col-8"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+               <template v-else>
+                    <div v-for="item in formatter"  class="col-md-6 col-lg-4">
+                        <a :href="'/News/Detail/'+item.id" class="text-decoration-none">
+                            <div class="card h-100 shadow-sm border-0 news-card">
+                                <!-- 圖片 -->
+                                <img :src="item.coverURL" class="card-img-top news-img" alt="新聞封面">
+                                <!-- 內容 -->
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <span class="badge rounded-pill bg-primary me-2">
+                                            {{item.category}}
+                                        </span>
+                                        <small class="text-muted">{{item.date}}</small>
+                                    </div>
+                                    <h2 class="card-title text-dark">
+                                        {{item.title}}
+                                    </h2>
+                                        <p class="card-text text-dark small">
+                                        {{item.content.replace(/<[^>]*>/g, '').slice(0, 80) + '...'}}
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </template>
+            </div>
+
+            <!---限時動態--->
+            <div class="container mt-3">
+                <div class="row justify-content-between">
+                    <template v-for="item in reels" :key="item.id">
+                            <div class="border-0 col me-2 rounded d-flex justify-content-center align-items-center position-relative" style="max-height:300px;aspect-ratio: 9 / 16; overflow-x:hidden" data-bs-toggle="modal" :data-bs-target="'#modal_' + item.id">
+                            <h5 class="z-3 bg-opacity-10 bg-black position-absolute text-white" style="bottom:3px;font-size:10pt ">by {{item.userName}}</h5>
+                            <img class="" :src="item.imageURL" style="height:100%;">
+                            </div>
+                    </template>
+                </div>
+            </div>
+            <!---最新文章區--->
+            <h2 class="text-danger pt-3">最新精選文章</h2>
+            <div class="container pt-3">
+                <div class="row gy-4">
+                    <template v-if="postIsLoading">
+                        <div v-for="i in 6" class="col-12 col-md-6 col-lg-4">
+                            <div class="card-item card h-100 shadow-sm">
+                                <div class="card-body d-flex flex-column placeholder-glow">
+                                    <!-- 文章標題 -->
+                                    <span class="placeholder col-12 placeholder-lg bg-primary"></span>
+
+                                    <!-- 文章摘要 -->
+                                    <p class="card-text placeholder col-12 placeholder-sm" style="max-height: 4.5em; overflow: hidden;"></p>
+
+                                    <!-- 作者資訊 -->
+                                    <div class="d-flex align-items-center my-2">
+                                        <span class="placeholder col-12"></span>
+                                    </div>
+
+                                    <!-- 按讚留言 -->
+                                    <div class="mt-auto d-flex justify-content-between small text-muted placeholder-glow">
+                                        <div>
+                                            <span class="placeholder col-12"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div v-for="posts in gamePosts" :key="posts.id" class="col-12 col-md-6 col-lg-3">
+                            <div class="card-item card h-100 shadow-sm">
+                                <div class="card-body d-flex flex-column">
+                                    <!-- 文章標題 -->
+                                    <h5 class="card-title text-primary">{{ posts.title }}</h5>
+
+                                    <!-- 文章摘要 -->
+                                    <p class="card-text text-truncate" style="max-height: 4.5em; overflow: hidden;">
+                                        {{ posts.content }}
+                                    </p>
+
+                                    <!-- 作者資訊 -->
+                                    <div class="d-flex align-items-center my-2">
+                                        <img :src="posts.author.profilePictureUrl" alt="頭像"
+                                             class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                        <span class="fw-semibold">{{ posts.author.displayName }}</span>
+                                    </div>
+
+                                    <!-- 按讚留言 -->
+                                    <div class="mt-auto d-flex justify-content-between small text-muted">
+                                        <div>
+                                            👍 {{ posts.likeCount }}　💬 {{ posts.commentCount }}
+                                        </div>
+                                        <a :href="`/Community#post-${posts.id}`" class="btn btn-outline-secondary btn-sm">進入文章</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+
+            <!---最新市集上架--->
+            <h2 class="text-danger pt-3">最新市集上架</h2>
+            <div class="position-relative">
+            <div class="product-scroll-container" ref="scrollContainer">
+                    <button v-on:click="scroll(-300)" class="scroll-btn left"><div style="position: absolute;top: -26%;left: 40%;">‹</div></button>
+                    <button v-on:click="scroll(300)" class="scroll-btn right"><div style="position: absolute;top: -26%;left: 40%;">›</div></button>
+                    <div class="product-row">
+                           <template v-if="productsIsLoading">
+                            <div v-for =" i in 8" class="card-item card mx-2" style="min-width: 16rem; flex: 0 0 auto;">
+                                <div class="spinner-border" role="status">
+                                  <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="card-body placeholder-glow">
+                                    <span class="placeholder col-6"></span>
+                                    <span class="placeholder col-4"></span>
+                                    <span class="placeholder col-4"></span>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-else>
+                                <div v-for="product in gameProducts"
+                                     class="card-item card mx-2 d-flex flex-column"
+                                     style="width: 16rem; height: 24rem; flex: 0 0 auto;">
+
+                                    <!-- 固定圖片比例 -->
+                                    <div class="card-img-top-container">
+                                        <img :src="product.imageUrl" class="card-img-top" alt="product">
+                                    </div>
+
+                                    <!-- 文字內容 -->
+                                    <div class="card-body d-flex flex-column">
+                                        <h5 class="card-title text-truncate" style="white-space: normal; word-wrap: break-word;">
+                                            {{ product.name }}
+                                        </h5>
+                                        <p class="card-text">售價: {{ formatPrice(product.price) }}</p>
+                                        <a :href="`/Market/Detail/${product.id}`" class="btn btn-secondary mt-auto">查看詳情</a>
+                                    </div>
+                                </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+    <script>
+            var app = Vue.createApp({
+            data() {
+                return {
+                    isReelOpen:false,
+                    merchandises:[],
+                    activeTab: 'all',
+                    newsIsLoading:true,
+                    productsIsLoading:true,
+                    postIsLoading:true,
+                    news:[],
+                    reels:[],
+                    gameDetail:[],
+                    gamePosts:[],
+                    gameProducts:[],
+                    showReelModal: false,
+                    currentReel: {
+                        imageURL: '',
+                        userName: ''
+                    },
+                }
+            },
+            computed: {
+                formatter() {
+                    const list = this.news[this.activeTab] || [];
+                    return list.map(x => {
+                        return {
+                            id: x.id,
+                            content: this.limitContentLength(x.content.replace(/<[^>]*>/g, '')),
+                            coverURL: x.coverURL,
+                            title: x.title,
+                            category: x.category
+                        };
+                    });
+                }
+            },
+            methods: {
+                getMech(){
+                    this.isLoading=true;
+                    fetch(`/api/mall/getmerchandises`).then(response=>response.json()).then(data=>this.merchandises=data).finally(()=>{this.isLoading=false})
+                },
+                switchTab(tabName) { this.activeTab = tabName;this.getNews(tabName); },
+                formatPrice(price) {
+                    return Math.floor(price) + ' 元';
+                },
+                scroll(value){
+                      this.$refs.scrollContainer.scrollBy({ left: value, behavior: 'smooth' });
+                },
+                limitContentLength(content){
+                    if(content.length > 45){
+                        return content.substring(0, 40) + "...";
+                    }
+                    return content;
+                },
+                getNews(category = 'all') {
+                    if (this.news[category]) return;
+                    this.newsIsLoading = true;
+                    fetch(`/api/news/getnews?category=${category}`)
+                        .then(res => res.json())
+                        .then(data => this.news[category] = data)
+                        .finally(() => this.newsIsLoading = false);
+                },
+                getReels(){
+                    fetch("/api/reels/getreels").then(res=>res.json()).then(data=> this.reels = data);
+                },
+                getGameDetails(take){
+                    fetch(`/api/gameDetails/getgamedetails/${take}`).then(res=>res.json()).then(data=> this.gameDetail = data);
+                },
+                getGamePosts(){
+                    this.postIsLoading=true;
+                    fetch(`/api/posts?page=1&pageSize=4`).then(res=>res.json()).then(data=> this.gamePosts =  data.data.posts).finally(()=>{this.postIsLoading=false});
+                },
+                getGameProducts(){
+                    this.productsIsLoading = true;
+                    fetch('/api/product/loadMarkeIndextData', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({})
+                    }).then(res=>res.json()).then(data => {this.gameProducts = data;}).finally(()=>{this.productsIsLoading=false})
+                  ;
+                }
+            },
+            mounted(){
+                this.getMech();
+                this.getNews('all');
+                this.getReels();
+                this.getGameDetails(4);
+                this.getGamePosts();
+                this.getGameProducts();
+            }
+        }).mount('#wrapperApp');
+    </script>
+}

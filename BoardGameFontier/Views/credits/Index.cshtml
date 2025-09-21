@@ -1,0 +1,969 @@
+﻿@section Styles{
+    <style>
+        .skillCard{
+            position:relative;
+            width:300px;
+            height:400px;
+            background:white;
+            transition:0.5s;
+            border-radius: 10px;
+        }
+
+        .skillCard:hover{
+            box-shadow:0 30px 50px rgba(0,0,0,0.2);
+        }
+
+        .face{
+            position:absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+        }
+
+        .face1{
+            padding:20px;
+            text-align:center;
+            background-color:white;
+            color:#013d4a;
+            border-radius: 25px;
+        }
+        .face1 h3{
+            margin-top:80px;
+        }
+
+        .face2{
+            transition:0.5s;
+        }
+
+        strong{
+            font-size:2.5rem;
+        }
+
+        .skillContent{
+            padding: 141px 15px 0px 15px;
+        }
+
+        .skillCard:hover .face2{
+            /* height:80px;
+            width:80px;
+            border-radius:50%; */
+            top:40px;
+            left:50%;
+            transition: 0.5s;
+            transform:translateX(-50%);
+            background-color:transparent;
+            /* border:2px solid #013d4a; */
+        }
+        .face2 img{
+            width:83%;
+        }
+
+        .skillCard:hover .face2 img{
+            transform: translateY(-200px);
+            margin-top: 11vh;
+            width: 11vh;
+            transition: 0.2s;
+        }
+
+        .card:hover .face2 h2{
+            color:#013d4a;
+            font-size:32px;
+        }
+
+        .main-wrapper {
+            max-width:none;
+            padding:0;
+        }
+
+        .teacherCard {
+            margin: 44px auto;
+            position: relative;
+            width: 60vw;
+            height: 26vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(0deg, #2f3469, #00d9b3);
+            border-radius: 20px;
+        }
+
+        .teacherName{
+            color: white;
+            font-weight:700;
+        }
+        .container-fluid{
+            padding:0;
+        }
+
+        .teacherCard img{
+            position: absolute;
+            bottom: 0;
+            left: 22%;
+            transform: translateX(-50%);
+            height: 20vw;
+            transition: 0.5s;
+            min-height: 350px;
+        }
+
+        .teacherCard:hover img{
+            height:450px;
+            left:74%;
+        }
+
+        .teacherTitle{
+            position: relative;
+            width: 40%;
+            right: -50%;
+            color: white;
+            transition: 0.5s;
+            opacity: 1;
+        }
+
+        .teacherComment{
+
+        }
+
+        .teacherCard:hover .teacherTitle{
+            right: 5%;
+            opacity: 0;
+        }
+
+        .teacherContent{
+            position:relative;
+            width:40%;
+            left:20%;
+            color:white;
+            transition:0.5s;
+            opacity:0;
+        }
+
+        .teacherCard:hover .teacherContent {
+            left: -30%;
+            opacity: 1;
+        }
+
+        section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .personaCcard{
+            position:relative;
+            width:300px;
+            height:260px;
+            border-radius:10px;
+            box-shadow:0px 5px 20px rgba(0,0,0,0.5);
+            transition:0.3s;
+            padding:20px 40px;
+        }
+
+        .imgbox{
+            position:relative;
+            width:100%;
+            height:100%;
+            transform: translateY(-60px);
+            z-index:1;
+        }
+
+        .personaCcard:hover{
+            height:420px;
+        }
+
+        .personaImg{
+            width:100%;
+            border-radius:10px;
+        }
+
+        .personaContent{
+            padding:10px 20px;
+            text-align:center;
+            color:#111;
+            transition:0.3s;
+            transform: translateY(-500px);
+            opacity:0;
+        }
+
+        .personaCcard:hover .personaContent{
+            opacity:1;
+            transform: translateY(-200px);
+        }
+
+        .card{
+            min-height: 220px;
+        }
+
+        .sec1 img{
+            width:30%;
+            margin-bottom:10vh;
+        }
+
+        .sec2 {
+            background-color: dodgerblue;
+        }
+
+        .sec3 {
+            background-color: #056964;
+        }
+
+        .sec4 {
+            background-color: #ffa600;
+        }
+
+        .sec5 {
+            background-color: rgb(255, 0, 85);
+        }
+
+        h1 {
+            font-size: 6vw;
+            color:black;
+        }
+
+        h2 {
+            color: white;
+            font-size: 4vw;
+            font-weight:700;
+        }
+
+        .sec2 h1{
+            color: white;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 35px;
+            color: #0ef;
+            font-weight: 600;
+        }
+
+        .sech1{
+            position: absolute;
+            font-size: 8vw;
+            color: #000;
+            font-weight: 400;
+            text-align: center;
+            line-height: 2em;
+            z-index: 5;
+            transform: skewY(-7deg);
+            text-shadow: 1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 0 #000, 5px 5px 0 #000, 10px 10px 0px rgba(0,0,0,.2);
+            animation: floating 5s ease-in-out infinite;
+        }
+
+        .sec1 p {
+            font-weight: 700;
+            font-size: 6em;
+            text-shadow: 1px 1px 0 #009393, 2px 2px 0 #009393, 3px 3px 0 #009393, 4px 4px 0 #009393, 5px 5px 0 #009393, 6px 6px 0 #000, 7px 7px 0 #000, 8px 8px 0 #000, 9px 9px 0 #000, 10px 10px 0 #000;
+        }
+
+
+        .sec2 p {
+            color: white;
+        }
+
+        .sec3 p {
+            color: #ff0;
+        }
+
+        .sec4 p {
+            color: #056964;
+        }
+
+        .sec5 .images {
+            gap: 10vw;
+        }
+
+        .sec5 .images img {
+            max-width: 350px;
+        }
+
+        /* scrolling styles */
+        section .animate {
+            opacity: 0;
+            filter: blur(5px);
+            transition: 0.5s;
+        }
+
+        section.show-animate .animate {
+            opacity: 1;
+            filter: blur(0px);
+        }
+
+        .sec2 .animate {
+            transform: translateX(100%);
+        }
+        .sec2.show-animate .animate {
+            transform: translateX(0);
+        }
+        .animate .text-center .mb-5{
+            transition-delay:0.2s;
+        }
+        .teacherEntry .teacherCard:nth-child(1){
+             transition-delay:0.4s;
+        }
+        .teacherEntry .teacherCard:nth-child(2){
+             transition-delay:0.6s;
+        }
+        .teacherEntry .teacherCard:nth-child(3){
+             transition-delay: 0.8s;
+        }
+        .teacherEntry .teacherCard:nth-child(4){
+             transition-delay: 1.0s;
+        }
+
+        .sec3 .animate {
+            transform: scale(0.7);
+        }
+
+        .sec3.show-animate .animate {
+            transform: scale(1);
+            color:white;
+            font-weight:bold;
+        }
+
+        .sec4 .animate {
+            transform: rotate(30deg);
+        }
+
+        .sec4.show-animate .animate {
+            transform: rotate(0deg);
+        }
+
+        .sec5 .animate {
+            transform: translateX(-100%);
+        }
+
+        .sec5.show-animate .animate {
+            transform: translateX(0);
+        }
+
+        p.animate {
+            transition-delay: 0.2s;
+        }
+
+        /* 共用樣式 */
+        .sec5 {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .sec5 .animate {
+            transform: translateX(-100%);
+            transition: 0.5s;
+        }
+
+        .sec5.show-animate .animate {
+            transform: translateX(0);
+        }
+
+        .sec5-title {
+            color: white;
+            font-weight: 700;
+            font-size: 8vw;
+            margin-bottom: 100px;
+        }
+
+        .personaCcard {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px auto;
+            text-align: center;
+            box-shadow: 0 0 12px rgba(0,0,0,0.4);
+            transition: 0.5s;
+        }
+
+        .personaCcard:hover {
+            transform: translateY(-8px);
+            transition: 0.5s;
+        }
+
+        .imgbox {
+            width: 100%;
+            height: 15vw;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .personaImg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .personaContent h4 {
+            color: white;
+            font-size: 2vh;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px #000;
+        }
+
+        .personaContent span {
+            display: block;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .personaContent ul {
+            color: white;
+            text-align: left;
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .personaContent li {
+            font-size: 14px;
+            line-height: 1.6;
+            list-style: disc;
+        }
+
+        .resumeBTN {
+            margin-top: 40px;
+            width: 60%;
+            text-align: center;
+            line-height: 200%;
+        }
+
+        /* === RWD 設計 === */
+        @@media (min-width: 1600px) {
+             h1{
+                 font-size:150px;
+             }
+        }
+
+        @@media (min-width: 1216px) {
+            .sec5-title .animate{
+                font-size: 176px;
+            }
+
+            .sec5 .images {
+                gap: 0vw;
+            }
+
+            .personaCcard {
+                width: 18%;
+                height: 15vw;
+            }
+
+            .imgbox{
+                margin-bottom: 152px;
+            }
+
+            .personaContent li {
+                font-size: 18px;
+            }
+
+            .personaContent h4 {
+                font-size: 2.5vh;
+            }
+
+            .personaContent span {
+                font-size: 18px;
+            }
+
+            .personaCcard:hover {
+                height: 100%;
+            }
+
+        }
+
+        @@media (max-width: 1215px) and (min-width: 1200px) {
+            .personaCcard{
+                margin: 100px auto;
+            }
+
+            .personaCcard:hover {
+                height: 530px;
+            }
+
+            .sec5 .images {
+                gap: 0;
+            }
+            .personaContent li {
+                font-size: 18px;
+            }
+
+            .personaContent span {
+                font-size: 20px;
+            }
+
+            .imgbox {
+                margin-bottom: 150px;
+            }
+
+            .personaContent h4 {
+                font-size: 2.5vh;
+            }
+        }
+
+        @@media (max-width: 1199px) and (min-width: 768px) {
+            .personaCcard{
+                width: 80%;
+            }
+
+            .personaContent span {
+                font-size: 30px;
+            }
+
+            .personaContent h4 {
+                font-size: 3vh;
+            }
+
+            .personaContent li {
+                font-size: 25px;
+            }
+
+            .imgbox {
+                height: 26vw;
+                margin-bottom: 148px;
+            }
+
+            .personaCcard:hover {
+                height: 100%;
+            }
+        }
+
+        @@media (max-width: 767px) {
+            .sec5-title{
+                font-size: 3rem;
+            }
+
+            .imgbox {
+                height: 42vw;
+                margin-bottom: 150px;
+            }
+
+            span{
+                font-size:24px;
+            }
+
+            .personaCcard:hover{
+                height: 800px;
+            }
+
+            .personaCcard {
+                width: 90%;
+                margin-bottom: 100px;
+            }
+
+            .personaContent h4 {
+                font-size: 54px;
+            }
+
+            .personaCcard span{
+                font-size: 24px;
+            }
+
+            .personaContent li {
+                font-size: 27px;
+            }
+        }
+
+        .skillContent p{
+            font-size:16px;
+            color:black;
+        }
+        </style>
+}
+<section class="sec1 show-animate">
+    <img src="https://marketing-prd.s3.amazonaws.com/logo/logo-tibame.svg" />
+        <h1 class="sec1h1 animate">微軟智慧應用 C#<br>
+            全端開發工程師養成班</h1>
+    <p class="animate">TJM102 第一組</p>
+</section>
+
+@*
+    <img src="https://r2-image-proxy.mariomario258.workers.dev/teacherReds.png" />
+    <img src="https://r2-image-proxy.mariomario258.workers.dev/teacherWang.png" />
+    <img src="https://r2-image-proxy.mariomario258.workers.dev/teacherZhung.png" />
+    <img src="https://r2-image-proxy.mariomario258.workers.dev/teacherMaru.png" />
+*@
+
+<section class="sec2 py-5">
+    <div class="container">
+        <h1 class="animate text-center mb-4">我們的指導老師</h1>
+        <p class="animate text-center mb-5">感謝業界講師們的尊尊教誨</p>
+        <div class="teacherEntry">
+            <div class="teacherCard animate">
+                <div class="teacherTitle">
+                    <h2>江湖最強的<br/>新興講師</h2>
+                </div>
+                <div class="teacherContent">
+                    <h2 class="teacherName">王耀慶老師</h2>
+                    <p class="teacherComment">每天進步1% 一年後你就會進步365%</p>
+                    <span class="teacherLecture">課程指導：JavaScript、Vue、JQuery</span>
+                </div>
+                <img src="https://r2-image-proxy.mariomario258.workers.dev/teacherReds.png" />
+            </div>
+            <div class="teacherCard animate">
+                <div class="teacherTitle">
+                    <h2>極致低調的<br/>微軟MVP</h2>
+                </div>
+                <div class="teacherContent">
+                    <h2 class="teacherName">王寧疆老師</h2>
+                    <p class="teacherComment">學習轉職的階段，本身一種洗鍊(SELECT)。</p>
+                    <span class="teacherLecture">課程指導：ASP.net、Azure雲端應用、Web API</span>
+                </div>
+                <img src="https://r2-image-proxy.mariomario258.workers.dev/teacherWang.png" />
+            </div>
+            <div class="teacherCard animate">
+                <div class="teacherTitle">
+                    <h2>身兼IT專家的<br/>兩寶爸</h2>
+                </div>
+                <div class="teacherContent">
+                    <h2 class="teacherName">莊啟宏老師</h2>
+                    <p class="teacherComment">AI時代來臨，同學們的選擇是正確的。</p>
+                    <span class="teacherLecture">課程指導：C#、資料庫設計、ADO.net</span>
+                </div>
+                <img src="https://r2-image-proxy.mariomario258.workers.dev/teacherZhung.png" />
+            </div>
+            <div class="teacherCard animate">
+                <div class="teacherTitle">
+                    <h2>前巴哈姆特的<br/>首席扛壩子</h2>
+                </div>
+                <div class="teacherContent">
+                    <h2 class="teacherName">洪興政老師</h2>
+                    <p class="teacherComment">用HTML打基礎、用CSS展現外在，最後再搭配JS就完美了。</p>
+                    <span class="teacherLecture"> 課程指導：HTML、CSS、RWD </span>
+                </div>
+                <img src="https://r2-image-proxy.mariomario258.workers.dev/teacherMaru.png" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="sec3">
+    <h1 class="animate">歷經500小時的轉職過程</h1>
+    <p class="animate">在這段時間，我們學了...</p>
+        <div class="row">
+            <div class="skillEntry col mx-3 my-3 animate">
+                <div class="skillCard">
+                    <div class="face face1">
+                        <div class="skillContent">
+                            <strong>HTML</strong>
+                            <p>前端網頁三劍客之一，用來建立最基本的網頁架構。</p>
+                        </div>
+                    </div>
+                    <div class="face face2">
+                        <img src="~/img/skillicon/html.png" />
+                    </div>
+                </div>
+            </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                    <div class="skillCard">
+                        <div class="face face1">
+                            <div class="skillContent">
+                                <strong>CSS</strong>
+                                <p>負責網頁的外觀與排版，讓網站更美觀並適應不同裝置。</p>
+                            </div>
+                        </div>
+                        <div class="face face2">
+                            <img src="~/img/skillicon/css.png" />
+                        </div>
+                    </div>
+                </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                        <div class="skillCard">
+                            <div class="face face1">
+                                <div class="skillContent">
+                                    <strong>JavaScript</strong>
+                                 <p>網頁的互動靈魂，能讓網站具備動態功能與使用者互動。</p>
+                                </div>
+                            </div>
+                            <div class="face face2">
+                                <img src="~/img/skillicon/javascript.png" />
+                            </div>
+                        </div>
+                    </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                        <div class="skillCard">
+                            <div class="face face1">
+                                <div class="skillContent">
+                                    <strong>Bootstrap</strong>
+                                    <p>快速建構響應式網頁的框架，內建排版與元件，提升開發效率。</p>
+                                </div>
+                            </div>
+                            <div class="face face2">
+                                <img src="~/img/skillicon/bootstrap.png" />
+                            </div>
+                        </div>
+                    </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                        <div class="skillCard">
+                            <div class="face face1">
+                                <div class="skillContent">
+                                    <strong>jQuery</strong>
+                                    <p>JavaScript函式庫，簡化操作DOM、事件與動畫的程式碼。</p>
+                                </div>
+                            </div>
+                            <div class="face face2">
+                                <img src="~/img/skillicon/jquery.png" />
+                            </div>
+                        </div>
+                    </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                        <div class="skillCard">
+                            <div class="face face1">
+                                <div class="skillContent">
+                                    <strong>Vue.js</strong>
+                                    <p>輕量且易上手的前端框架，適合打造互動式的單頁應用程式。</p>
+                                </div>
+                            </div>
+                            <div class="face face2">
+                                <img src="~/img/skillicon/vue.png" />
+                            </div>
+                        </div>
+                    </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                        <div class="skillCard">
+                            <div class="face face1">
+                                <div class="skillContent">
+                                    <strong>C#</strong>
+                                    <p>強大的物件導向語言，經常用於後端開發。</p>
+                                </div>
+                            </div>
+                            <div class="face face2">
+                                <img src="~/img/skillicon/csharp.png" />
+                            </div>
+                        </div>
+                    </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                        <div class="skillCard">
+                            <div class="face face1">
+                                <div class="skillContent">
+                                    <strong>Azure</strong>
+                                    <p>微軟的雲端平台，能部署、管理與監控應用程式與資料。</p>
+                                </div>
+                            </div>
+                            <div class="face face2">
+                                <img src="~/img/skillicon/azure.png" />
+                            </div>
+                        </div>
+                    </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                        <div class="skillCard">
+                            <div class="face face1">
+                                <div class="skillContent">
+                                    <strong>GitHub</strong>
+                                    <p>程式碼版本控制與協作平台，方便多人協作與專案管理。</p>
+                                </div>
+                            </div>
+                            <div class="face face2">
+                                <img src="~/img/skillicon/github.png" />
+                            </div>
+                        </div>
+                    </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                        <div class="skillCard">
+                            <div class="face face1">
+                                <div class="skillContent">
+                                    <strong>ADO.net</strong>
+                        <p>.NET 平台的資料存取技術，能連接資料庫、執行查詢與管理資料，常用於後端開發。</p>
+                                </div>
+                            </div>
+                            <div class="face face2">
+                                <img src="~/img/skillicon/adonet.png" />
+                            </div>
+                        </div>
+                    </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                <div class="skillCard">
+                    <div class="face face1">
+                        <div class="skillContent">
+                            <strong>ASP.net</strong>
+                            <p>微軟的網頁開發技術，適合打造強大且安全的後端服務。</p>
+                        </div>
+                    </div>
+                    <div class="face face2">
+                        <img src="~/img/skillicon/aspnetcore.png" />
+                    </div>
+                </div>
+            </div>
+            <div class="skillEntry col mx-3 my-3 animate">
+                <div class="skillCard">
+                    <div class="face face1">
+                        <div class="skillContent">
+                            <strong>SQL Server</strong>
+                            <p>微軟的資料庫系統，能高效處理與管理資料。</p>
+                        </div>
+                    </div>
+                    <div class="face face2">
+                        <img src="~/img/skillicon/sqlserver.png" />
+                    </div>
+                </div>
+            </div>
+        </div>
+</section>
+
+@* <section class="sec4">
+    <h1 class="animate">除此之外，還有最先進的AI雲端應用：Microsoft Azure</h1>
+    <p class="animate">圖片識別、語音判讀、語音合成</p>
+</section> *@
+
+<section class="sec5">
+    <h1 class="sec5-title animate">快雇用我們吧！</h1>
+    <div class="images row">
+            <div class="personaCcard animate">
+                <div class="imgbox">
+                    <img class="personaImg" src="~/img/portrait/rko.png" />
+                </div>
+                <div class="personaContent">
+                    <h4>廖昊威</h4>
+                <span>負責社群頁面前後端製作</span>
+                    <ul>
+                        <li>
+                            貼文、留言系統CRUD全介面功能
+                        </li>
+                        <li>
+                            遊戲、文章熱門排行
+                        </li>
+                        <li>
+                            按讚即時更新系統
+                        </li>
+                        <li>
+                            互相追蹤管理系統
+                        </li>
+                        <li>
+                            前端使用者操作體感優化
+                        </li>
+                        <li>
+                        前端bootstrap+CSS美化
+                        </li>
+                        <li>
+                        RWD多尺寸螢幕對應設定
+                        </li>
+                </ul>
+                <a href="#" class="btn btn-warning resumeBTN" style="color:black; font-weight:700;">104履歷表</a>
+
+                </div>
+            </div>
+            <div class="personaCcard animate">
+                <div class="imgbox">
+                    <img class="personaImg" src="~/img/portrait/Sharon.png" />
+                </div>
+                <div class="personaContent">
+                    <h4>王品瑄</h4>
+                <span>後臺管理功能開發</span>
+                <ul>
+                    <li>
+                        資料分析
+                    </li>
+                    <li>
+                        檢舉/審核功能
+                    </li>
+                    <li>
+                        帳號權限管理
+                    </li>
+                </ul>
+                <a href="#" class="btn btn-warning resumeBTN" style="color:black; font-weight:700;">104履歷表</a>
+
+                </div>
+            </div>
+            <div class="personaCcard animate">
+                <div class="imgbox">
+                    <img class="personaImg" src="~/img/portrait/Nene.png" />
+                </div>
+                <div class="personaContent">
+                    <h4>洪苡芯</h4>
+                    <span>市集開發</span>
+                    <ul>
+                        <li>
+                            購物車
+                        </li>
+                        <li>
+                            關鍵字篩選
+                        </li>
+                        <li>
+                            分類篩選
+                        </li>
+                    </ul>
+                <a href="#" class="btn btn-warning resumeBTN" style="color:black; font-weight:700;">104履歷表</a>
+                </div>
+            </div>
+            <div class="personaCcard animate">
+                <div class="imgbox">
+                    <img class="personaImg" src="~/img/portrait/Tank.png" />
+                </div>
+                <div class="personaContent">
+                    <h4>陳建宇</h4>
+                    <span>負責用戶驗證及註冊功能。</span>
+                    <ul>
+                        <li>
+                            註冊 / 登入功能
+                        </li>
+                        <li>
+                            寄送驗證信（Email 驗證流程）
+                        </li>
+                        <li>
+                            忘記密碼與重設功能
+                        </li>
+                        <li>
+                            編輯個人資訊
+                        </li>
+                        <li>
+                            帳號隱私設定
+                        </li>
+                        <li>
+                            軟刪除帳號
+                        </li>
+                    </ul>
+                <a href="#" class="btn btn-warning resumeBTN" style="color:black; font-weight:700;">104履歷表</a>
+
+                </div>
+            </div>
+            <div class="personaCcard animate">
+                <div class="imgbox">
+                    <img class="personaImg" src="~/img/portrait/Eddie.png" />
+                </div>
+                <div class="personaContent">
+                    <h4>劉益辰</h4>
+                    <span>負責即時更新功能開發。</span>
+                    <ul>
+                        <li>
+                            首頁、圖鑑、新聞等頁面的CRUD製作。
+                        </li>
+                        <li>
+                            聊天及收信匣的WebSocket開發
+                        </li>
+                        <li>
+                            CloudFlare API串接(圖片上傳功能)
+                        </li>
+                        <li>
+                            製作團隊頁面(本畫面)的CSS設計與應用。
+                        </li>
+                    </ul>
+                <a href="https://pda.104.com.tw/profile/share/dj5fVSncrBpON2mRRoaN4AoGUdlJHqRS" class="btn btn-warning resumeBTN" style="color:black; font-weight:700;">104履歷表</a>
+                </div>
+            </div>
+    </div>
+</section>
+
+
+@section Scripts{
+    <script>
+        let sections = document.querySelectorAll('section');
+
+        window.onscroll = () => {
+            sections.forEach(sec => {
+                let scrollDistance = window.scrollY;
+                let secDistance = sec.offsetTop;
+
+                if(scrollDistance >= secDistance - 150) {
+                    sec.classList.add('show-animate');
+                }
+                else {
+                    sec.classList.remove('show-animate');
+                }
+            })
+        }
+    </script>
+}

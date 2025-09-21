@@ -1,0 +1,54 @@
+﻿@model List<News>
+@{
+    ViewData["Title"] = "新聞管理";
+}
+<body class="min-vh-100 bg-light">
+    <div class="container-fluid">
+        <div class="row d-flex flex-grow-1">
+            <!-- 側邊選單 -->
+            @Html.Partial("_AdminSidebar")
+
+            <!-- 主內容 -->
+            <main id="postApp" class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="d-flex justify-content-between mb-3">
+                    <h2>新聞管理</h2>
+                    <a class="btn btn-secondary" asp-controller="News" asp-action="Create">建立新聞</a>
+                </div>
+                <!-- 發文清單 -->
+                <div class="card mb-4">
+                    <div class="card-header">文章總覽</div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>標題</th>
+                                    <th>分類</th>
+                                    <th>狀態</th>
+                                    <th>發布時間</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach(var item in Model)
+                                {
+                                <tr>
+                                    <td>@item.Title</td>
+                                    <td>@item.category</td>
+                                    <td><span class="badge bg-success">@item.status</span></td>
+                                    <td>@item.Created</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-primary" asp-controller="News" asp-action="Edit" asp-route-id="@item.Id">修改</a>
+                                        <a class="btn btn-sm btn-danger" asp-controller="News" asp-action="Delete" asp-route-id="@item.Id">刪除</a>
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+</body>

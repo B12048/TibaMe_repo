@@ -1,0 +1,417 @@
+﻿@section Styles {
+    <link href="https://unpkg.com/vue3-easy-data-table/dist/style.css" rel="stylesheet">
+    <style>
+        .bfg-table {
+          /* Header */
+          --easy-table-header-font-size: 14px;
+          --easy-table-header-background-color: #e6fff5;   /* 淡綠底 */
+          --easy-table-header-text-color: #167c5a;         /* 深綠字 */
+          --easy-table-header-height: 44px;
+          --easy-table-header-border-bottom-color: #b9ebd3;
+
+          /* Body */
+          --easy-table-body-row-font-size: 14px;
+          --easy-table-body-row-height: 44px;
+          --easy-table-body-row-background-color: #ffffff;
+          --easy-table-body-row-text-color: #2f3b4b;
+          --easy-table-body-row-border-bottom-color: #edf2f7;
+          --easy-table-body-row-hover-background-color: #f6fffb;
+
+          /* Footer / 分頁列 */
+          --easy-table-footer-background-color: #ffffff;
+          --easy-table-footer-text-color: #4d646f;
+          --easy-table-footer-border-top-color: #d9f7be;
+
+          /* 邊框/圓角/陰影 */
+          --easy-table-border: 1px solid #b9ebd3;
+          --easy-table-border-radius: 16px;
+          --easy-table-box-shadow: 0 6px 18px rgba(22, 124, 90, .08);
+
+          /* 捲軸（桌面） */
+          --easy-table-scrollbar-thumb-color: #a3e4c2;
+          --easy-table-scrollbar-track-color: #f2fffa;
+        }
+    </style>
+}
+@*View*@
+<div class="container">
+    <div class="row mt-3">
+        <!---左側欄開始--->
+        <div class="col-3">
+            <partial name="~/Views/Shared/Partials/_CommunityLeftSidebar.cshtml" />
+        </div>
+        <!---左側欄結束--->
+        @*右側Vue開始*@
+        <div class="col-9">
+            <div id="app">
+                @*新增報表的案件與篩選功能*@
+                <div class="mb-3">
+                    <table style="width:100%">
+                        <tr>
+                            <td style="width:50%">
+                                <button class="btn btn-success" title="新增報表紀錄"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#InsertModalPage">
+                                    新增
+                                </button>
+                            </td>
+                            <td style="width:50%" class="form-floating">
+                                <input v-model="filterValue" class="form-control" placeholder="" />
+                                <label class="form-label">輸入關鍵字</label>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                @*Easy-data-table*@
+                <div class="mb-3 bfg-table">
+                    <easy-data-table alternating
+                                     :headers="headers" @*欄位標題*@
+                                     :items="orders"
+                                     theme-color="#48c78e"
+                                     buttons-pagination @*換頁功能*@
+                                     :rows-per-page="5"
+                                     :loading="loading">
+                        <template #loading>
+                            <img src="~/img/edtable/in turn appearing.gif" title="資料載入中" />
+                        </template>
+                        <template #empty-message>
+                            <h5>Not Found</h5>
+                        </template>
+                       <template #expand="row">
+                          <div> 
+                            商品名稱:
+                            {{row?.productName || '' }} ，方案名稱:
+                            {{row?.bundleName  || '' }}，價格:
+                            {{row?.price ?? '' }}
+                          </div>
+                        </template>
+                        <template #item-operation="order">
+                            <img src="~/img/edtable/edit.png" v-on:click="updateItem(order)" title="編輯報表" />
+                            <img src="~/img/edtable/delete.png" v-on:click="deleteItem(order)" title="刪除報表紀錄" />
+                        </template>
+
+                    </easy-data-table>
+                </div>
+                @*新增紀錄的ModelPage*@
+                <div class="modal fade"
+                     id="InsertModalPage"
+                     tabindex="-1"
+                     data-bs-backdrop="static"
+                     data-bs-keyboard="false"
+                     role="dialog"
+                     aria-labelledby="modalTitleId"
+                     aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-md" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalTitleId" style="font-weight:bold">
+                                    新增銷貨紀錄
+                                </h5>
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="container">
+                                    <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="insertModel.ClientName" placeholder="" />
+                                         <label class="form-label">收件人姓名</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="insertModel.Country" placeholder="" />
+                                         <label class="form-label">所在國家</label>
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="insertModel.City" placeholder="" />
+                                         <label class="form-label">居住城市</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="insertModel.PostalCode" placeholder="" />
+                                         <label class="form-label">郵遞區號</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="insertModel.OrderNo" placeholder="" />
+                                         <label class="form-label">訂單編號</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="insertModel.ProductName" placeholder="" />
+                                         <label class="form-label">商品名稱</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="insertModel.BundleName" placeholder="" />
+                                         <label class="form-label">套餐名稱</label>
+                                    </div>
+                                     <div class="form-floating mb-3"> <!-- min="0" 不允許負數，step="1"限制只能輸入整數 -->
+                                         <input class="form-control" type="number" min="0" step="1"
+                                         v-model.number="insertModel.Price" placeholder="" v-on:input="sanitizePrice" />
+                                         <label class="form-label">售價</label>            <!--↑過濾非數字-->
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input type="date" class="form-control" v-model="insertModel.CreatedAt" placeholder="" />
+                                         <label class="form-label">訂單建立時間</label>
+                                    </div>
+
+                                     <div class="form-floating mb-3">
+                                         <input type="date" class="form-control" v-model="insertModel.PaidAt" placeholder="" />
+                                         <label class="form-label">付款時間</label>
+                                    </div>
+
+                                     <div class="mb-3">
+                                      <div class="form-check"> <!-- form-check單純勾選 -->
+                                        <input class="form-check-input" type="checkbox"
+                                               id="shippingStatus"
+                                               v-model="insertModel.ShippingStatus"
+                                               :true-value="'已出貨'"
+                                               :false-value="'尚未出貨'">
+                                        <label class="form-check-label" for="shippingStatus">
+                                          {{ insertModel.ShippingStatus === '已出貨' ? '已出貨' : '尚未出貨' }}
+                                        </label>
+                                      </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal">
+                                    取消
+                                </button>
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        data-bs-dismiss="modal"
+                                        v-on:click="insertOrder">
+                                    儲存
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @*修改紀錄的ModelPage*@
+                     <div class="modal fade"
+                     id="editModalPage"
+                     tabindex="-1"
+                     data-bs-backdrop="static"
+                     data-bs-keyboard="false"
+                     role="dialog"
+                     aria-labelledby="modalTitleId"
+                     aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-md" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalTitleId" style="font-weight:bold">
+                                   編輯銷貨紀錄
+                                </h5>
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="container">
+                                    <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="updateModel.ClientName" placeholder="" />
+                                         <label class="form-label">收件人姓名</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="updateModel.Country" placeholder="" />
+                                         <label class="form-label">所在國家</label>
+                                    </div>
+                                    <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="updateModel.City" placeholder="" />
+                                         <label class="form-label">居住城市</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="updateModel.PostalCode" placeholder="" />
+                                         <label class="form-label">郵遞區號</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="updateModel.OrderNo" placeholder="" />
+                                         <label class="form-label">訂單編號</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="updateModel.ProductName" placeholder="" />
+                                         <label class="form-label">商品名稱</label>
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input class="form-control" v-model="updateModel.BundleName" placeholder="" />
+                                         <label class="form-label">套餐名稱</label>
+                                    </div>
+                                     <div class="form-floating mb-3"> <!-- min="0" 不允許負數，step="1"限制只能輸入整數 -->
+                                         <input class="form-control" type="number" min="0" step="1"
+                                         v-model.number="updateModel.Price" placeholder="" v-on:input="sanitizePrice" />
+                                         <label class="form-label">售價</label>            <!--↑過濾非數字-->
+                                    </div>
+                                     <div class="form-floating mb-3">
+                                         <input type="date" class="form-control" v-model="updateModel.CreatedAt" placeholder="" />
+                                         <label class="form-label">訂單建立時間</label>
+                                    </div>
+
+                                     <div class="form-floating mb-3">
+                                         <input type="date" class="form-control" v-model="updateModel.PaidAt" placeholder="" />
+                                         <label class="form-label">付款時間</label>
+                                    </div>
+
+                                     <div class="mb-3">
+                                      <div class="form-check"> <!-- form-check單純勾選 -->
+                                        <input class="form-check-input" type="checkbox"
+                                               id="shippingStatus"
+                                               v-model="updateModel.ShippingStatus"
+                                               :true-value="'已出貨'"
+                                               :false-value="'尚未出貨'">
+                                        <label class="form-check-label" for="shippingStatus">
+                                          {{ updateModel.ShippingStatus === '已出貨' ? '已出貨' : '尚未出貨' }}
+                                        </label>
+                                      </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal">
+                                    取消
+                                </button>
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        data-bs-dismiss="modal"
+                                        v-on:click="updateOrder">
+                                    儲存編輯
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>               
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="https://unpkg.com/vue3-easy-data-table"></script>
+    <script>
+        var vueApp={
+             components:{
+                EasyDataTable:window['vue3-easy-data-table']
+            },
+            data(){
+            return{
+                //同一端不需要baseAddress
+                loading:false,
+                filterValue:"", //篩選
+                insertModel:{
+                    ClientName: "",       // 收件人姓名
+                    Country: "",          // 所在國家
+                    City: "",             // 居住城市
+                    PostalCode: "",       // 郵遞區號
+                    OrderNo: "",          // 訂單編號
+                    ProductName: "",      // 商品名稱
+                    BundleName: "",       // 套餐名稱
+                    Price: null,          // 售價 (整數)，建議初始化為 null
+                    CreatedAt: new Date().toISOString().split("T")[0], // 訂單建立時間 (yyyy-mm-dd)
+                    PaidAt: new Date().toISOString().split("T")[0],    // 付款時間 (yyyy-mm-dd)
+                    ShippingStatus: "尚未出貨" // 出貨狀態，預設尚未出貨
+                },
+                 updateModel:{
+                    CaseId:0,
+                    ClientName: "",       // 收件人姓名
+                    Country: "",          // 所在國家
+                    City: "",             // 居住城市
+                    PostalCode: "",       // 郵遞區號
+                    OrderNo: "",          // 訂單編號
+                    ProductName: "",      // 商品名稱
+                    BundleName: "",       // 套餐名稱
+                    Price: null,          // 售價 (整數)，建議初始化為 null 編輯也一樣
+                    CreatedAt: new Date().toISOString().split("T")[0], // 訂單建立時間 (yyyy-mm-dd)
+                    PaidAt: new Date().toISOString().split("T")[0],    // 付款時間 (yyyy-mm-dd)
+                    ShippingStatus: "" // 出貨狀態撈資料表，所以預設空字串
+                },
+
+                headers:[
+                    { text: "客戶編號", value: "caseId", sortable: true,fixed:true },
+                    { text: "收件人姓名", value: "clientName", sortable: true,fixed:true },
+                    { text: "所在國家", value: "country", sortable: true },
+                    { text: "居住城市", value: "city", sortable: true },
+                    { text: "郵遞區號", value: "postalCode", sortable: true },
+                    { text: "訂單編號", value: "orderNo", sortable: true },
+                    { text: "商品名稱", value: "productName", sortable: true },
+                    { text: "套餐名稱", value: "bundleName", sortable: true },
+                    { text: "售價", value: "price", sortable: true },
+                    { text: "訂單建立時間", value: "createdAt", sortable: true },
+                    { text: "付款時間", value: "paidAt", sortable: true },
+                    { text: "出貨狀態", value: "shippingStatus", sortable: true },
+                    { text: "編輯", value: "operation", sortable: false }
+                ],
+                orders:[],
+
+                };
+            },
+            methods:{
+                sanitizePrice(e) {
+                    // 保留只有數字
+                    e.target.value = e.target.value.replace(/[^\d]/g, '')
+                    this.insertModel.Price = e.target.value ? parseInt(e.target.value) : null
+                },
+                filterOrder:async function(){
+                    let _this = this;
+                    var request ={};
+                    request.CaseId = isNaN(Number(_this.filterValue)) || _this.filterValue == ""
+                    ? -1 : Number(_this.filterValue)
+                    request.ClientName = request.Country = request.City = request.PostalCode 
+                    = request.OrderNo = request.ProductName = request.BundleName
+                    = request.ShippingStatus = _this.filterValue;
+                    const n = Number(_this.filterValue);
+                    if (Number.isFinite(n) && _this.filterValue !== "") request.Price = n; // 只有是數字才送
+                    _this.loading = true; //這邊顯示Loading templete
+                    try{
+                    var response = await fetch("/api/OrdersAPI/Filter",{
+                        method:"POST",
+                        body:JSON.stringify(request),
+                        headers:{
+                            "content-type":"application/json"
+                        }
+                    });
+
+                    if(response.ok){
+                        var data = await response.json();
+                        _this.loading = false; //查到後隱藏Loading templete
+                        data = data.map(item =>({//把data裡面元素一次取一個出來放在item
+                        ...item, //...的功能是JS的寫法，意思是除了下面兩個欄位要調整以外，其他照原有內容
+                        CreatedAt :item.CreatedAt ? new Date(item.CreatedAt).toISOString().split("T")[0]
+                                    :"",
+                        PaidAt :item.PaidAt ? new Date(item.PaidAt).toISOString().split("T")[0]
+                                    :""
+                        }));
+                        _this.orders = data;
+                    }
+                    }
+                    catch(err){
+                        alert(err.message)
+                    }
+                    
+                },
+                updateItem:function(order){
+                    alert("編輯")
+                },
+                deleteItem:function(order){
+                    alert("刪除")
+                },
+                insertOrder:function(){
+                    alert("InsertOrder")
+                },
+                updateOrder:function(){
+                    alert("updateOrder")
+                },
+            },
+            mounted:function(){
+                let _this = this; //防JS callback
+                _this.filterOrder()
+            }
+
+        };
+        var app = Vue.createApp(vueApp).mount("#app")
+    </script>
+}

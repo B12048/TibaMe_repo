@@ -1,0 +1,14 @@
+﻿html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh; /* 保證至少是視窗高度 */
+    background-image: url('/img/bgf_bg.png');
+    background-repeat: repeat; /* 平鋪 */
+    background-size: cover; /* 圖片自動填滿*/
+    background-position: center; /* 置中 */
+    background-attachment: fixed; /* 捲動時背景固定（看需求可加可不加） */
+}

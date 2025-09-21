@@ -1,0 +1,355 @@
+﻿<div id="marketDetail">
+    <div class="row">
+        <!--左側選單-->
+        <div class="col-3">
+            <partial name="~/Views/Shared/Partials/_CommunityLeftSidebar.cshtml" />
+        </div>
+
+        <!--右側內容-->
+        <div class="col-7">
+            <!--商品內容-->
+            <div class="col mb-2">
+                <div class="card p-3">
+                    <div class="row g-3">
+                        <!-- 左半邊-->
+                        <div class="col-md-6 d-flex flex-column align-items-center">
+
+                            <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-indicators">
+                                    <button v-for="(img, index) in product.imageUrl" :key="index"
+                                        type="button"
+                                        :data-bs-target="'#carouselExampleIndicators'"
+                                        :data-bs-slide-to=index
+                                        :class="{ active: index === 0 }"
+                                        :aria-current="index === 0 ? 'true' : undefined"
+                                        :aria-label="'Slide ' + (index + 1)">
+                                    </button>
+                                </div>
+                                <div class="carousel-inner">
+                                    <div :class="['carousel-item', { active: index === 0 }]" v-for="(img, index) in product.imageUrl" :key="index">
+                                        <img :src="img" class="d-block w-100" style="width: 100%; height: 400px; object-fit: cover">
+                                    </div>
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            </div>
+
+
+                            <p class="w-100">商品分類：{{ getCategoryName(product.category) }}</p>
+                        </div>
+
+                        <!-- 右半邊-->
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-center align-items-center mb-3 h-50">
+                                <h5 class="mb-0" style="font-size: 4vh;font-weight: 700;">{{ product.productName }}</h5>
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <span class="me-2 fs-2">商品價格</span>
+                                <span class="fs-2">{{ formatPrice(product.price) }}</span>
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <span class="me-2">庫存數量</span>
+                                <span>{{ product.stockQuantity }}</span>
+                            </div>
+
+                            <!-- 購買數量 -->
+                            <div class="input-group mb-3">
+                                <span class="me-2">購買數量</span>
+                                <button class="btn btn-outline-secondary" type="button" v-on:click="decreaseQuantity">-</button>
+                                <input type="number" class="form-control text-center" v-model.number="quantity" min="1">
+                                <button class="btn btn-outline-secondary" type="button" v-on:click="increaseQuantity">+</button>
+                            </div>
+                            <div class="d-flex">
+                                <button class="btn btn-outline-secondary" v-on:click="addToCart">加入購物車</button>
+                                    <form asp-controller="Chat" asp-action="CreateBuy" method="post" class="col">
+									<input type="hidden" name="receiverEmail" class="form-control" :value="product.userName" />
+                                        <input type="hidden" name="wantedGoods" class="form-control" :value="product.productName" />
+                                        <button type="submit" class="btn btn-outline-secondary">聯絡賣家購買</button>
+                                    </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--商品動作-->
+                    <div class="card mt-3">
+                        <div class="card-body row">
+                            <div class="col-8">
+                                <div class="d-flex">
+                                    <img :src="product.productOwnerPic"
+                                         class="rounded-circle chat-avatar" 
+                                        style="margin: 0 1vw;width: 7vw;height: 7vw;object-fit: cover;border-radius: 50%;box-shadow: 0 1px 3px rgba(0,0,0,0.1);"/>
+                                    <div class="sellerInfo" style="    padding: 1vw">
+                                        <h2>{{ product.productOwner }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--商品描述-->
+            <div class="col mb-3">
+                <div class="card p-3">
+                    <p class="fw-bold fs-4">商品描述</p>
+                    {{ product.description }}
+                </div>
+            </div>
+
+            <!--問與答專區-->
+            <div class="col mb-3">
+                <div class="card p-3" style="background-color:darkgray;">
+                    <h5 class="mb-3 fw-bold">問與答專區</h5>
+
+                    <!-- 歷史問答紀錄 -->
+                    <div v-for="qa in qaList" :key="qa.id" class="mb-2 border-bottom pb-2">
+                        {{ qa.text }}
+                    </div>
+
+                    <!-- 提問區 -->
+                    <div class="mt-3">
+                        <label for="questionArea" class="form-label fw-bold">與賣家提問</label>
+                        <textarea class="form-control" id="questionArea" rows="4"
+                                  placeholder="請勿留下私人聯絡資訊，避免受騙，造成不必要的損失！"
+                                  v-model="questionText"></textarea>
+                    </div>
+
+                    <div class="mt-3">
+                        <button class="btn btn-outline-dark" v-on:click="submitQuestion">確認送出</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--購物車-->
+        <div class="col-2">
+            <button class="btn btn-secondary mb-2" type="button" data-bs-toggle="modal" data-bs-target="#cartModal">
+                購物車
+            </button>
+        </div>
+    </div>
+
+    <!-- 購物車 Modal -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cartModalLabel">購物車</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+                </div>
+
+                <div class="modal-body">
+                    <ul class="list-group">
+                        <li v-for="(item, index) in shoppingList" class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                {{ item.name }} x{{ item.quantity }}
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary me-2" v-on:click="updateCart(item, -1)">-</button>
+                                <button class="btn btn-sm btn-outline-secondary me-2" v-on:click="updateCart(item, 1)">+</button>
+                                <span class="badge bg-primary rounded-pill">NT${{ item.price * item.quantity }}</span>
+                                <button class="btn btn-sm btn-danger ms-2" v-on:click="removeFromCart(index)">✕</button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 購物車 Modal footer -->
+                <div class="modal-footer">
+                    <span class="me-auto fw-bold">總計：NT${{ totalPrice }}</span>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">繼續購物</button>
+
+                    <!-- 修改這裡：用 form 包起來，送到 ChatController -->
+                    <form asp-controller="Chat" asp-action="CreateBuy" method="post" class="d-inline">
+                        <input type="hidden" name="receiverEmail" :value="product.userName" />
+                        <input type="hidden" name="wantedGoods" :value="shoppingList.map(i => i.name).join(', ')" />
+                        <button type="submit" class="btn btn-success">聯絡賣家購買</button>
+                    </form>
+
+                    <button type="button" class="btn btn-warning ms-2" v-on:click="clearCart">清空購物車</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                productId: null,
+                product: {
+                    productName: '',
+                    imageUrl: [],
+                    price: 0,
+                    stockQuantity: 0,
+                    description: '',
+                    category: '',
+                    producOwner: '',
+                    userName:''
+                },
+                quantity: 1,
+                shoppingList: [],
+                questionText: '',
+                qaList: [],
+                categoryList:[
+                    { name: "家庭遊戲", value: 1},
+                    { name: "派對遊戲", value: 2},
+                    { name: "兒童遊戲", value: 3},
+                    { name: "玩家遊戲", value: 4},
+                    { name: "卡牌遊戲", value: 5},
+                    { name: "雙人遊戲", value: 6}
+                ],
+            };
+        },
+        computed: {
+            totalPrice() {
+                return this.shoppingList.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            }
+        },
+        methods: {
+            getCategoryName(val){
+                if(!val) return '';
+                return this.categoryList.find(x => x.value == val).name;
+            },
+            formatPrice(price) {
+                return Math.floor(price) + ' 元';
+            },
+            getProductIdFromUrl() {
+                const pathSegments = window.location.pathname.split('/');
+                return pathSegments[pathSegments.length - 1];
+            },
+            getProductDetail() {
+                fetch('/api/product/getProductDetail', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: this.productId })
+                })
+                .then(res => res.json())
+                .then(data => { 
+                    this.product.productName = data.productName;
+                    this.product.price = data.price;
+                    this.product.stockQuantity = data.stockQuantity;
+                    this.product.description = data.description;
+                    this.product.category = data.category;
+                    this.product.productOwner = data.productOwner;
+                    this.product.productOwnerPic = data.productOwnerPic;
+                    this.product.userName = data.userName;
+                    if (data.imageUrl) {
+                        const urls = data.imageUrl.split(',');
+                        urls.forEach(url => {
+							this.product.imageUrl.push(url.trim());
+                         });
+                    }
+                })
+                .catch(err => console.error("取得商品明細失敗：", err));
+            },
+            increaseQuantity() {
+                if (this.quantity < this.product.stockQuantity) {
+                    this.quantity++;
+                } else {
+                    alert("已達商品庫存上限！");
+                }
+            },
+            decreaseQuantity() {
+                if (this.quantity > 1) {
+                    this.quantity--;
+                }
+            },
+            loadCart() {
+                const cart = localStorage.getItem("shoppingList");
+                this.shoppingList = cart ? JSON.parse(cart) : [];
+            },
+            saveCart() {
+                localStorage.setItem("shoppingList", JSON.stringify(this.shoppingList));
+            },
+            addToCart() {
+                const existing = this.shoppingList.find(item => item.productId === this.productId);
+                if (existing) {
+                    if (existing.quantity + this.quantity > this.product.stockQuantity) {
+                        alert("已達商品庫存上限！");
+                        existing.quantity = this.product.stockQuantity;
+                    } else {
+                        existing.quantity += this.quantity;
+                    }
+                } else {
+                    this.shoppingList.push({
+                        productId: this.productId,
+                        name: this.product.productName,
+                        price: this.product.price,
+                        quantity: this.quantity,
+                        userName: this.product.userName
+                    });
+                }
+                this.saveCart();
+                this.quantity = 1;
+            },
+            updateCart(item, change) {
+                const product = this.shoppingList.find(p => p.productId === item.productId);
+                if (!product) return;
+
+                if (change > 0) {
+                    if (product.quantity + 1 > this.product.stockQuantity) {
+                        alert("已達商品庫存上限！");
+                        product.quantity = this.product.stockQuantity;
+                    } else {
+                        product.quantity++;
+                    }
+                } else if (change < 0) {
+                    if (product.quantity > 1) {
+                        product.quantity--;
+                    }
+                }
+
+                this.saveCart();
+            },
+            removeFromCart(index) {
+                this.shoppingList.splice(index, 1);
+                this.saveCart();
+            },
+            clearCart() {
+                this.shoppingList = [];
+                this.saveCart();
+            },
+            // ----- 問與答功能 -----
+            submitQuestion() {
+                if (!this.questionText.trim()) return;
+
+                const newQA = {
+                    id: Date.now(),
+                    text: this.questionText
+                };
+                this.qaList.push(newQA);
+                this.questionText = '';
+                this.saveQA();
+            },
+            saveQA() {
+                localStorage.setItem(`qaList_${this.productId}`, JSON.stringify(this.qaList));
+            },
+            loadQA() {
+                const stored = localStorage.getItem(`qaList_${this.productId}`);
+                this.qaList = stored ? JSON.parse(stored) : [];
+            }
+        },
+        mounted() {
+            this.productId = this.getProductIdFromUrl();
+            this.getProductDetail();
+            this.loadCart();
+            this.loadQA();
+        }
+    }).mount('#marketDetail');
+</script>

@@ -1,0 +1,151 @@
+﻿@model GameDetail
+
+<div class="container mt-4">
+    <div class="row d-flex flex-grow-1">
+        <!-- 側邊選單 -->
+        @Html.Partial("_AdminSidebar")
+
+        <!-- 主內容區 -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2>建立新圖鑑</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @* <div asp-validation-summary="All" class="text-danger"></div> *@
+
+                        <div class="form-group mb-3">
+                            <label asp-for="zhtTitle" class="form-label">中文名稱</label>
+                            <input asp-for="zhtTitle" class="form-control" placeholder="若無，可省略" />
+                            <span asp-validation-for="zhtTitle" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="engTitle" class="form-label">英文名稱</label>
+                            <input asp-for="engTitle" class="form-control" />
+                            <span asp-validation-for="engTitle" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Cover" class="form-label">遊戲封面圖</label>
+                            <input asp-for="Cover" class="form-control" placeholder="請放入封面圖的URL" />
+                            <span asp-validation-for="Cover" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="PictureURL1" class="form-label">遊戲圖1</label>
+                            <input asp-for="PictureURL1" class="form-control" placeholder="請放入遊戲圖1的URL" />
+                            <span asp-validation-for="PictureURL1" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="PictureURL2" class="form-label">遊戲圖2</label>
+                            <input asp-for="PictureURL2" class="form-control" placeholder="請放入遊戲圖2的URL" />
+                            <span asp-validation-for="PictureURL2" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="PictureURL3" class="form-label">遊戲圖3</label>
+                            <input asp-for="PictureURL3" class="form-control" placeholder="請放入遊戲圖3的URL" />
+                            <span asp-validation-for="PictureURL3" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="YoutubeURL" class="form-label">遊戲影片</label>
+                            <input asp-for="YoutubeURL" class="form-control" placeholder="請放入遊戲影片的URL" />
+                            <span asp-validation-for="YoutubeURL" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Intro" class="form-label">遊戲簡介</label>
+                            <input asp-for="Intro" class="form-control" />
+                            <span asp-validation-for="Intro" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="YearReleased" class="form-label">遊戲發行年份</label>
+                            <input asp-for="YearReleased" class="form-control" />
+                            <span asp-validation-for="YearReleased" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="OverallRank" class="form-label">BGG全體排名</label>
+                            <input asp-for="OverallRank" class="form-control" />
+                            <span asp-validation-for="OverallRank" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="BGFRank" class="form-label">本站排名</label>
+                            <input asp-for="BGFRank" class="form-control" />
+                            <span asp-validation-for="BGFRank" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="MinPlayers" class="form-label">最少玩家人數</label>
+                            <input asp-for="MinPlayers" class="form-control" />
+                            <span asp-validation-for="MinPlayers" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="MaxPlayers" class="form-label">最多玩家人數</label>
+                            <input asp-for="MaxPlayers" class="form-control" />
+                            <span asp-validation-for="MaxPlayers" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="MinTime" class="form-label">最短遊戲時間</label>
+                            <input asp-for="MinTime" class="form-control" />
+                            <span asp-validation-for="MinTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="MaxTime" class="form-label">最長遊戲時間</label>
+                            <input asp-for="MaxTime" class="form-control" />
+                            <span asp-validation-for="MaxTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Age" class="form-label">適用年齡</label>
+                            <input asp-for="Age" class="form-control" />
+                            <span asp-validation-for="Age" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Weight" class="form-label">遊戲重度</label>
+                            <input asp-for="Weight" class="form-control" />
+                            <span asp-validation-for="Weight" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Designer" class="form-label">遊戲設計師</label>
+                            <input asp-for="Designer" class="form-control" />
+                            <span asp-validation-for="Designer" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Artist" class="form-label">遊戲美術</label>
+                            <input asp-for="Artist" class="form-control" />
+                            <span asp-validation-for="Artist" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label">遊戲介紹</label>
+                            <input asp-for="Description" class="form-control" />
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">建立</button>
+                            <a asp-controller="Dex" asp-action="Index" class="btn btn-secondary">取消</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

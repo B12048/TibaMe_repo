@@ -1,0 +1,365 @@
+﻿@{
+    ViewData["Title"] = "市集";
+}
+
+@section Styles {
+    <style>
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            width: 100%;
+            height: 400px; /* 固定高度 */
+        }
+
+            .product-card:hover {
+                transform: translateY(-10px) scale(1.03);
+                box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+            }
+
+        .product-card-body {
+            padding: 1rem;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex: 1 1 auto;
+            text-align: center;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background-color: #f8f9fa;
+        }
+
+        .product-price {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #d63384;
+            margin: 0.3rem 0;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #333;
+            margin: 0.3rem 0;
+        }
+    </style>
+}
+
+<div id="productPage">
+    <!-- 搜尋 -->
+    <div class="row mb-2">
+        <div class="col-10 d-flex justify-content-end">
+            <div class="input-group" style="max-width: 300px;">
+                <input type="search" class="form-control" placeholder="Search" v-model="searchQuery" @@keyup.enter="applySearch">
+                <button class="btn btn-secondary" type="button" @@click="applySearch">Search</button>
+            </div>
+        </div>
+        <div class="col-2"></div>
+    </div>
+
+    <div class="row">
+        <!-- 左側選單 -->
+        <div class="col-3">
+            <partial name="~/Views/Shared/Partials/_CommunityLeftSidebar.cshtml" />
+        </div>
+
+        <!-- 右側內容 -->
+        <div class="col-7">
+            <!-- 商品列表 -->
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+                <div class="col" v-for="product in paginatedProducts" :key="product.id" v-on:click="goToDetail(product.id)">
+                    <div class="card product-card shadow-sm">
+                        <img class="product-img" :src="product.imageUrl" alt="product image" />
+                        <div class="product-card-body">
+                            <p class="product-price">{{ formatPrice(product.price) }}</p>
+                            <p class="product-name">{{ product.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 沒有商品時顯示 -->
+            <div v-if="paginatedProducts.length === 0" class="text-center text-muted mt-4">
+                目前沒有商品
+            </div>
+
+            <!-- 換頁 -->
+            <nav class="d-flex justify-content-center mt-4" v-if="totalPages > 1">
+                <ul class="pagination">
+                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                        <button class="page-link" @@click="goToPage(currentPage - 1)">«</button>
+                    </li>
+                    <li v-for="page in totalPages" :key="page" class="page-item"
+                        :class="{ active: page === currentPage }">
+                        <button class="page-link" @@click="goToPage(page)">
+                            {{ page }}
+                        </button>
+                    </li>
+                    <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                        <button class="page-link" @@click="goToPage(currentPage + 1)">»</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- 購物車 & 篩選 -->
+        <div class="col-2">
+            <button class="btn btn-secondary mb-2" type="button" data-bs-toggle="modal" data-bs-target="#cartModal">
+                購物車
+            </button>
+
+            <!-- 預算 -->
+            <div class="card border-primary" style="width: 12rem;">
+                <div class="card-header">預算</div>
+                <div class="card-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="0-200" v-model="selectedBudgets" id="price1">
+                        <label class="form-check-label" for="price1">0~500</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="201-500" v-model="selectedBudgets" id="price2">
+                        <label class="form-check-label" for="price2">501~1000</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="501+" v-model="selectedBudgets" id="price3">
+                        <label class="form-check-label" for="price3">1001以上</label>
+                    </div>
+                </div>
+            </div>
+            <br /><br />
+
+            <!-- 分類 -->
+            <div class="list-group">
+                <button v-for="category in categoryList"
+                        :key="category.value"
+                        type="button"
+                        class="list-group-item list-group-item-action"
+                        :class="{ active: selectedCategory === category.value }"
+                        v-on:click="selectCategory(category.value)">
+                    {{ category.name }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 購物車 Modal -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cartModalLabel">購物車</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+                </div>
+
+                <div class="modal-body">
+                    <ul class="list-group">
+                        <li v-for="(item, index) in shoppingList" class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>{{ item.name }} x{{ item.quantity }}</div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary me-2" v-on:click="updateCart(item, -1)">-</button>
+                                <button class="btn btn-sm btn-outline-secondary me-2" v-on:click="updateCart(item, 1)">+</button>
+                                <span class="badge bg-primary rounded-pill">NT${{ item.price * item.quantity }}</span>
+                                <button class="btn btn-sm btn-danger ms-2" v-on:click="removeFromCart(index)">✕</button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="modal-footer">
+                    <span class="me-auto fw-bold">總計：NT${{ totalPrice }}</span>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">繼續購物</button>
+
+                    <!-- 聯絡賣家購買表單 -->
+                    <form asp-controller="Chat" asp-action="CreateBuy" method="post" class="d-inline">
+                        <input type="hidden" name="receiverEmail" :value="shoppingList.map(i => i.userName).join(', ')" />
+                        <!-- 把購物車內的商品名稱串起來 -->
+                        <input type="hidden" name="wantedGoods" :value="shoppingList.map(i => i.name).join(', ')" />
+                        <button type="submit" class="btn btn-success">聯絡賣家購買</button>
+                    </form>
+
+                    <button type="button" class="btn btn-warning ms-2" v-on:click="clearCart">清空購物車</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Vue-->
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                productList: [],
+                shoppingList: [],
+                selectedBudgets: [],
+                searchQuery: "",
+                appliedQuery: "",
+                categoryList:[
+                    { name: "家庭遊戲", value: 1},
+                    { name: "派對遊戲", value: 2},
+                    { name: "兒童遊戲", value: 3},
+                    { name: "玩家遊戲", value: 4},
+                    { name: "卡牌遊戲", value: 5},
+                    { name: "雙人遊戲", value: 6},
+                ],
+                selectedCategory: null,
+                currentPage: 1,
+                itemsPerPage: 9
+               
+            };
+        },
+        computed: {
+            filteredProducts() {
+                let result = this.productList;
+
+                   // 先依照 id 由大到小排序
+                result = result.slice().sort((a, b) => b.id - a.id);
+
+                // 預算過濾
+                if(this.selectedBudgets.length > 0){
+                    result = result.filter(product => this.selectedBudgets.some(range => {
+                        if(range === "0-200") return product.price >=0 && product.price <= 500;
+                        if(range === "201-500") return product.price >=501 && product.price <=1000;
+                        if(range === "501+") return product.price >=1001;
+                    }));
+                }
+
+                // 搜尋過濾
+                if(this.appliedQuery.trim() !== ""){
+                    const keyword = this.appliedQuery.toLowerCase();
+                    result = result.filter(product => product.name.toLowerCase().includes(keyword));
+                }
+
+                // 分類過濾
+                if(this.selectedCategory !== null){
+                    result = result.filter(product => product.category === this.selectedCategory);
+                }
+
+                return result;
+            },
+            totalPages() {
+                return Math.ceil(this.filteredProducts.length / this.itemsPerPage);
+            },
+            paginatedProducts() {
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                return this.filteredProducts.slice(start, start + this.itemsPerPage);
+            },
+            totalPrice() {
+                return this.shoppingList.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            }
+        },
+        methods: {
+            applySearch() {
+                this.appliedQuery = this.searchQuery.trim();
+                this.currentPage = 1; // 搜尋後回到第一頁
+            },
+            goToPage(page) {
+                if (page >= 1 && page <= this.totalPages) {
+                    this.currentPage = page;
+                }
+            },
+            selectCategory(value){
+                this.selectedCategory = this.selectedCategory === value ? null : value;
+                this.currentPage = 1; // 切換分類時回到第一頁
+            },
+            formatPrice(price){
+                return Math.floor(price) + ' 元';
+            },
+            loadMarkeIndextData(){
+                fetch('/api/product/loadMarkeIndextData',{
+                    method:'POST',
+                    headers:{ 'Content-Type':'application/json' },
+                    body: JSON.stringify({})
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.productList = data;
+                    this.shoppingList.forEach(item => {
+                        const productInfo = this.productList.find(p => p.id === item.productId);
+                        if(productInfo && item.quantity > productInfo.stock){
+                            item.quantity = productInfo.stock;
+                        }
+                    });
+                    this.saveCart();
+                })
+                .catch(err => console.error(err));
+            },
+            goToDetail(id){
+                window.location.href = `/Market/Detail/${id}`;
+            },
+
+            // ===== 購物車功能 =====
+            saveCart(){
+                localStorage.setItem("shoppingList", JSON.stringify(this.shoppingList));
+            },
+            loadCart(){
+                const cart = localStorage.getItem("shoppingList");
+                this.shoppingList = cart ? JSON.parse(cart) : [];
+            },
+            addToCart(product, quantity=1){
+                const existing = this.shoppingList.find(item => item.productId === product.id);
+                if(existing){
+                    if(existing.quantity + quantity > product.stock){
+                        alert("已達商品庫存上限！");
+                        existing.quantity = product.stock;
+                    } else {
+                        existing.quantity += quantity;
+                    }
+                } else {
+                    this.shoppingList.push({
+                        productId: product.id,
+                        name: product.name,
+                        price: product.price,
+                        quantity: Math.min(quantity, product.stock),
+                        userName: product.userName
+                    });
+                }
+                this.saveCart();
+            },
+            updateCart(item, change){
+                const productInfo = this.productList.find(p => p.id === item.productId);
+                if(!productInfo) return;
+                if(change > 0){
+                    if(item.quantity + 1 > productInfo.stock){
+                        alert("已達商品庫存上限！");
+                        item.quantity = productInfo.stock;
+                    } else {
+                        item.quantity++;
+                    }
+                } else if(change < 0){
+                    if(item.quantity > 1){
+                        item.quantity--;
+                    }
+                }
+                this.saveCart();
+            },
+            removeFromCart(index){
+                this.shoppingList.splice(index,1);
+                this.saveCart();
+            },
+            clearCart(){
+                this.shoppingList = [];
+                this.saveCart();
+            }
+        },
+        mounted(){
+            this.loadCart();
+            this.loadMarkeIndextData();
+            console.log("res = ", this.shoppingList);
+        }
+    }).mount('#productPage');
+</script>

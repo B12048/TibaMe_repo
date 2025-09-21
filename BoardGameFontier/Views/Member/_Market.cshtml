@@ -1,0 +1,178 @@
+﻿<div id="marketPage" class="container position-relative mt-4" v-cloak>
+
+    <h4 class="text-center border p-2">我的商品</h4>
+
+    <!-- 搜尋列 -->
+    <div class="row mb-2">
+        <div class="col-10 d-flex justify-content-end">
+            <input class="me-2" type="search" v-model="searchQuery" placeholder="Search" @@keyup.enter="applySearch">
+            <button class="btn btn-secondary" type="button" @@click="applySearch">Search</button>
+        </div>
+        <div class="col-2"></div>
+    </div>
+
+    <!-- 商品列表 -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+        <div class="col" v-for="mypage in paginatedList" :key="mypage.id">
+            <div class="card shadow-sm product-card h-100"
+                 :onclick="`location.href='@Url.Action("EditProduct", "MyPage")/${mypage.id}'`">
+                <img class="product-img" :src="mypage.imageUrl" alt="product image" />
+                <div class="product-card-body">
+                    <p class="product-price">{{ formatPrice(mypage.price) }}</p>
+                    <p class="product-name">{{ mypage.name }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 沒有商品時顯示 -->
+    <div v-if="paginatedList.length === 0" class="text-center text-muted mt-4">
+        目前沒有商品
+    </div>
+
+    <!-- 右下角固定新增商品按鈕 -->
+    <button class="btn btn-secondary shadow"
+            style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; width: auto;"
+            onclick="location.href='@Url.Action("NewProduct", "MyPage")'">
+        新增商品
+    </button>
+
+    <!-- 換頁 -->
+    <nav class="d-flex justify-content-center mt-4" v-if="totalPages > 1">
+        <ul class="pagination">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <button class="page-link" @@click ="goToPage(currentPage - 1)">«</button>
+            </li>
+            <li v-for="page in totalPages" :key="page" class="page-item"
+                :class="{ active: page === currentPage }">
+                <button class="page-link" @@click ="goToPage(page)">
+                    {{ page }}
+                </button>
+            </li>
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                <button class="page-link" @@click ="goToPage(currentPage + 1)">»</button>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+
+<!-- 商品卡片樣式 -->
+<style>
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+        height: 400px; /* 固定卡片高度 */
+        display: flex;
+        flex-direction: column;
+        border-radius: 20px; /* 圓角 */
+        overflow: hidden;
+        background: #fff; /* 改為白底，避免大跑版 */
+        border: 1px solid #eee;
+    }
+
+        .product-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        }
+
+    .product-card-body {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    .product-img {
+        object-fit: cover;
+        width: 100%;
+        height: 225px;
+        background-color: #f8f9fa;
+    }
+
+    .product-price {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #d63384;
+        margin: 0.2rem 0;
+    }
+
+    .product-name {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #333;
+        margin: 0.2rem 0;
+    }
+</style>
+
+
+<!-- Vue 實例 -->
+<script>
+    window.initMarketVue = function () {
+        if (typeof Vue === 'undefined') {
+            console.error('Vue 未載入，無法初始化 Market Vue');
+            return;
+        }
+
+        const { createApp } = Vue;
+
+        window.marketApp = createApp({
+            data() {
+                return {
+                    mypageList: [],
+                    searchQuery: "",
+                    appliedQuery: "",
+                    currentPage: 1,
+                    itemsPerPage: 9
+                };
+            },
+            computed: {
+                filteredList() {
+                    if (!this.appliedQuery) return this.mypageList;
+                    const q = this.appliedQuery.toLowerCase();
+                    return this.mypageList.filter(item =>
+                        (item.name && item.name.toLowerCase().includes(q)) ||
+                        (item.price && item.price.toString().includes(q))
+                    );
+                },
+                totalPages() {
+                    return Math.ceil(this.filteredList.length / this.itemsPerPage);
+                },
+                paginatedList() {
+                    const start = (this.currentPage - 1) * this.itemsPerPage;
+                    const end = start + this.itemsPerPage;
+                    return this.filteredList.slice(start, end);
+                }
+            },
+            methods: {
+                loadMarketData() {
+                    fetch('/api/market/loadMarketData', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    })
+                        .then(res => res.json())
+                        .then(data => { this.mypageList = data; })
+                        .catch(err => { console.error('載入失敗：', err); });
+                },
+                applySearch() {
+                    this.appliedQuery = this.searchQuery.trim();
+                    this.currentPage = 1; // 搜尋後回到第1頁
+                },
+                goToPage(page) {
+                    if (page >= 1 && page <= this.totalPages) {
+                        this.currentPage = page;
+                    }
+                },
+                formatPrice(price){
+                    return Math.floor(price) + ' 元';
+                },
+            },
+            mounted() {
+                this.loadMarketData();
+            }
+        }).mount('#marketPage');
+    };
+</script>

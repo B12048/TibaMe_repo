@@ -1,0 +1,90 @@
+﻿@model BoardGameFontier.Models.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "註冊";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.HideHeaderFooter = true;
+}
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card p-4" style="width: 400px; text-align: center;">
+        <h2 class="mb-4">註冊會員</h2>
+
+        
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <form asp-action="Register" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- Email -->
+            <div class="mb-3 text-start">
+                <label asp-for="UserName" class="form-label">電子郵件<span class="text-danger">*</span></label>
+                <input asp-for="UserName" class="form-control" placeholder="請輸入Email帳號" />
+                <span asp-validation-for="UserName" class="text-danger"></span>
+            </div>
+
+            <!-- 密碼 -->
+            <div class="mb-3 text-start">
+                <label asp-for="Password" class="form-label">密碼<span class="text-danger">*</span></label>
+                <input asp-for="Password" type="Password" placeholder="請輸入密碼" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <!-- 確認密碼 -->
+            <div class="mb-3 text-start">
+                <label asp-for="ConfirmPassword" class="form-label">確認密碼<span class="text-danger">*</span></label>
+                <input asp-for="ConfirmPassword" type="Password" class="form-control" placeholder="確認密碼" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <!-- 性別（用 asp-for 讓 data-val-* 生出來） -->
+            <div class="mb-3 text-start">
+                <label class="form-label">性別：<span class="text-danger">*</span></label><br />
+                <div class="form-check form-check-inline">
+                    <input asp-for="Gender" class="form-check-input" type="radio" id="male" value="1" />
+                    <label class="form-check-label" for="male">男</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input asp-for="Gender" class="form-check-input" type="radio" id="female" value="2" />
+                    <label class="form-check-label" for="female">女</label>
+                </div>
+                <span asp-validation-for="Gender" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 text-start">
+                <label class="form-label">出生日期：<span class="text-danger">*</span></label><br />
+                <div class="d-flex justify-content-between">
+                    <select id="year" class="form-select me-2">...</select>
+                    <select id="month" class="form-select me-2">...</select>
+                    <select id="day" class="form-select">...</select>
+                </div>
+                <input asp-for="BirthDate" type="hidden" id="BirthDate" />
+                <span asp-validation-for="BirthDate" class="text-danger"></span>
+            </div>
+
+
+            <button type="submit" class="btn btn-success w-100 mb-3">確定註冊</button>
+        </form>
+
+        <button class="btn btn-link w-100 mb-2" onclick="location.href='@Url.Action("IndexLogin", "Login")'">返回登入畫面</button>
+
+        <div class="d-flex justify-content-center gap-3">
+            <a class="icon google d-flex justify-content-center align-items-center rounded-circle"
+               style="background-color:#db4437;color:#fff;width:40px;height:40px;font-weight:bold;text-decoration:none;"
+               href="@Url.Action("ExternalLogin", "Login", new { provider = "Google", returnUrl = "/" })">G</a>
+            <a class="icon fb d-flex justify-content-center align-items-center rounded-circle"
+               style="background-color:#3b5998;color:#fff;width:40px;height:40px;font-weight:bold;text-decoration:none;"
+               href="@Url.Action("ExternalLogin", "Login", new { provider = "Facebook", returnUrl = "/" })">f</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="~/js/birthdate-select.js"></script>
+
+    <script>
+
+    </script>
+}

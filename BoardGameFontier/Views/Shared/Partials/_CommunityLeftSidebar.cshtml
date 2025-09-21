@@ -1,0 +1,219 @@
+﻿@using BoardGameFontier.Services
+@using BoardGameFontier.Models.ViewModels
+@inject ICommunityService CommunityService
+
+@*
+    社群左側邊欄 - 可重用元件
+    包含用戶資訊、熱門文章排行、熱門遊戲排行
+    可在社群首頁、個人頁面、遊戲詳情頁等多處使用
+    
+    使用依賴注入直接獲取資料，確保所有頁面都能顯示完整功能
+*@
+
+@{
+    // 檢查是否為 CommunityViewModel（優化：如果已有資料就不重複獲取）
+    CommunityViewModel sidebarData;
+    
+    if (Model is CommunityViewModel communityModel)
+    {
+        // 如果當前頁面已經是 CommunityViewModel，直接使用
+        sidebarData = communityModel;
+    }
+    else
+    {
+        // 其他頁面：透過輕量級方法獲取側邊欄資料（不包含輪播）
+        sidebarData = await CommunityService.GetSidebarDataAsync();
+    }
+}
+
+<!-- 引用左側邊欄專屬樣式 -->
+<link rel="stylesheet" href="~/css/components/community-sidebar.css" asp-append-version="true" />
+
+<!-- 左側邊欄 -->
+<div class="sidebar-left">
+    <!-- 用戶資訊區塊 -->
+    <div class="sidebar-card user-info-card">
+        @if (sidebarData.CurrentUser.IsAuthenticated)
+        {
+            <div class="sidebar-header">會員資訊</div>
+            <div class="user-info-content">
+                <div class="user-avatar-section">
+                    <div class="user-avatar">
+                        @if (!string.IsNullOrEmpty(sidebarData.CurrentUser.ProfilePictureUrl))
+                        {
+                            <img src="@sidebarData.CurrentUser.ProfilePictureUrl" alt="@sidebarData.CurrentUser.DisplayName" class="user-avatar-img" />
+                        }
+                        else
+                        {
+                            <i class="bi bi-person-circle"></i>
+                        }
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">@(sidebarData.CurrentUser.DisplayName ?? "桌遊玩家")</div>
+                        <div class="user-level">等級 Lv.@sidebarData.CurrentUser.Level</div>
+                    </div>
+                </div>
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">@sidebarData.CurrentUser.PostsCount</span>
+                        <span class="stat-label">貼文</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">@sidebarData.CurrentUser.LikesCount</span>
+                        <span class="stat-label">獲讚</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">@sidebarData.CurrentUser.FollowersCount</span>
+                        <span class="stat-label">粉絲</span>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <a href="/Member/IndexMember" class="user-action-btn">
+                        <i class="bi bi-person-gear"></i>
+                        個人頁面
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="sidebar-header">訪客資訊</div>
+            <div class="guest-info-content">
+                <div class="guest-avatar">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+                <div class="guest-message">
+                    <h6>歡迎來到桌遊前線！</h6>
+                    <p>登入後享受完整社群功能</p>
+                </div>
+                <div class="guest-actions">
+                    <a href="/Login/IndexLogin" class="guest-action-btn login-btn">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        登入
+                    </a>
+                    <a href="/Login/Register" class="guest-action-btn register-btn">
+                        <i class="bi bi-person-plus"></i>
+                        註冊
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- 最近追蹤者列表 (僅登入用戶顯示) -->
+    @if (sidebarData.CurrentUser.IsAuthenticated && sidebarData.RecentFollowers.Any())
+    {
+        <div class="sidebar-card followers-card">
+            <div class="sidebar-header">
+                最近追蹤者
+                <small class="text-muted">(@sidebarData.CurrentUser.FollowersCount)</small>
+            </div>
+            <div class="followers-content">
+                @foreach (var follower in sidebarData.RecentFollowers)
+                {
+                    <div class="follower-item" data-user-id="@follower.Id">
+                        <div class="follower-avatar">
+                            @if (!string.IsNullOrEmpty(follower.ProfilePictureUrl))
+                            {
+                                <img src="@follower.ProfilePictureUrl" alt="@follower.DisplayName" class="follower-avatar-img" />
+                            }
+                            else
+                            {
+                                <i class="bi bi-person-circle"></i>
+                            }
+                        </div>
+                        <div class="follower-info">
+                            <div class="follower-name" title="@follower.DisplayName">@follower.DisplayName</div>
+                            <div class="follower-meta">
+                                @follower.FollowedTimeAgo
+                                @if (follower.IsMutualFollow)
+                                {
+                                    <span class="mutual-follow-indicator">• 互相追蹤</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="followers-view-all">
+                <a href="/Member/IndexMember?tab=followers" class="view-all-link">
+                    查看全部粉絲 <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    }
+
+    <!-- 熱門文章排行 -->
+    <div class="sidebar-card ranking-card">
+        <div class="sidebar-header">熱門文章排行</div>
+        <div class="ranking-content">
+            @foreach (var post in sidebarData.HotPosts)
+            {
+                <a href="javascript:void(0)" class="ranking-item-link" onclick="navigateToPost(@post.Id)">
+                    <div class="ranking-item" data-rank="@post.Rank" data-post-id="@post.Id">
+                        <span class="rank-number">@post.Rank</span>
+                        <div class="rank-info">
+                            <div class="rank-title" title="@post.Title">@post.Title</div>
+                            @if (!string.IsNullOrEmpty(post.MetaInfo))
+                            {
+                                <div class="rank-meta">@post.MetaInfo</div>
+                            }
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+    
+
+    <!-- 熱門遊戲排行 -->
+    <div class="sidebar-card ranking-card">
+        <div class="sidebar-header">熱門遊戲排行</div>
+        <div class="ranking-content">
+            @foreach (var game in sidebarData.HotGames)
+            {
+                <a href="/Dex/Detail/@game.Id" class="ranking-item-link">
+                    <div class="ranking-item" data-rank="@game.Rank" data-game-id="@game.Id">
+                        <span class="rank-number">@game.Rank</span>
+                        <div class="rank-info">
+                            <div class="rank-title" title="@game.Name">@game.Name</div>
+                            <div class="rank-meta">@game.MetaInfo</div>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@* 
+    左側邊欄樣式由 community-sidebar.css 獨立管理
+    實現真正的元件化設計，可在任何頁面重複使用
+*@
+
+<script>
+    // 導航到指定貼文的函數
+    function navigateToPost(postId) {
+        // 確保 postId 是數字
+        const numericPostId = parseInt(postId);
+        if (isNaN(numericPostId)) {
+            return;
+        }
+        
+        // 檢查當前頁面是否為社群頁面
+        const currentPath = window.location.pathname.toLowerCase();
+        
+        if (currentPath === '/community' || currentPath === '/community/') {
+            // 如果已在社群頁面，使用現有的 JavaScript 功能直接載入貼文詳情
+            if (window.vueApp && typeof window.vueApp.viewPostDetail === 'function') {
+                window.vueApp.viewPostDetail(numericPostId);
+            } else {
+                // 如果 vueApp 不存在，重新導向到社群頁面
+                window.location.href = `/Community?postId=${numericPostId}`;
+            }
+        } else {
+            // 如果不在社群頁面，導向到社群頁面並顯示該貼文
+            window.location.href = `/Community?postId=${numericPostId}`;
+        }
+    }
+</script>

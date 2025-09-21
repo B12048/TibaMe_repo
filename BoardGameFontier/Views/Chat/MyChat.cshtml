@@ -1,0 +1,118 @@
+﻿@section Styles {
+    <style>
+
+        #messageList {
+            padding: 20px;
+            overflow-y: auto;
+            margin: 5px 0;
+            width: 100%;
+            height: 80vh;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: rgba(20, 184, 166, 0.2) solid 0.5px;
+            border: solid #14b8a6 2px;
+            border-radius: 1%;
+        }
+
+        .chat-hover:hover {
+            background-color: rgb(20, 184, 166,0.5);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .chat-entry img {
+            border: 2px solid #e9ecef;
+        }
+
+        .portrait {
+            border-radius: 100%;
+            overflow: hidden;
+        }
+
+        .portrait img {
+            width: 100%;
+            margin: 0 auto;
+        }
+    </style>
+}
+@{
+    bool islogging = User.Identity.IsAuthenticated;
+    string UserName = User.Identity.Name;  //應該是email
+}
+@model PrivateMessageViewModel
+<div class="container">
+    <div class="row mt-3">
+        <!---左側欄開始--->
+        <div class="col-3">
+            <partial name="~/Views/Shared/Partials/_CommunityLeftSidebar.cshtml" />
+        </div>
+        <!---左側欄結束--->
+        <div id="app" class="col-9">
+            <input type="hidden" id="senderEmail" value="@UserName">
+            <ul id="messageList" class="">
+                @foreach (var item in Model.ChatPreviews)
+                {
+                    <a asp-controller="Chat" asp-action="SelectUser" asp-route-SelectId="@item.ChatUser.Id" class="chat-entry text-decoration-none text-dark">
+                        <div class="d-flex align-items-start p-3 border-bottom chat-hover">
+                            <!-- User Avatar -->
+                            <div class="me-3 flex-shrink-0">
+                                <img src="@item.ChatUser.ProfilePictureUrl" class="rounded-circle shadow-sm" style="width: 48px; height: 48px; object-fit: cover;">
+                            </div>
+
+                            <!-- Chat Content -->
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-1 fw-bold">@item.ChatUser.DisplayName</h6>
+                                    <small class="text-muted">@item.LatestMessage?.CreatedAt.ToString("HH:mm")</small>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <p class="mb-0 text-truncate me-2" style="max-width: 220px;">@item.LatestMessage?.Message</p>
+
+                                    @if (@item.UnreadCount != 0)
+                                    {
+                                        <span class="badge bg-danger rounded-pill">@item.UnreadCount</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </ul>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newChat" data-bs-whatever="mdo">建立新聊天</button>
+        </div>
+    </div>
+</div>
+
+
+<!---建立新聊天的彈出視窗--->
+<div class="modal fade" id="newChat" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">建立新聊天</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Chat" asp-action="Create" method="post" class="col">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="recipient-name" class="col-form-label">收信人Email:</label>
+                        <input type="email" name="receiverEmail" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="message-text" class="col-form-label">訊息:</label>
+                        <input type="text" name="receiverMsg" class="form-control" id="message-text" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-info">建立新聊天</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* <form asp-action="Create" method="post" class="col">
+    <input type="email" name="receiverEmail" class="form-control" placeholder="請輸入新聊天對象的email" required />
+    <button type="submit" class="btn btn-info">建立新聊天</button>
+</form> *@

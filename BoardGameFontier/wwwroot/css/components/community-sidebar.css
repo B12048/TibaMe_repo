@@ -1,0 +1,1017 @@
+/* ========================================
+   社群左側邊欄 
+======================================== */
+
+/* CSS 變數統一管理 */
+:root {
+    --sidebar-primary: #14b8a6;
+    --sidebar-primary-light: #5eead4;
+    --sidebar-text: #0f2419;
+    --sidebar-text-muted: rgba(15, 36, 25, 0.8);
+    --sidebar-glass-bg: rgba(255, 255, 255, 0.2);
+    --sidebar-glass-border: rgba(20, 184, 166, 0.2);
+    --sidebar-shadow: 0 4px 16px rgba(20, 184, 166, 0.1);
+    --sidebar-transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* 字體設定 */
+.sidebar-left {
+    font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+}
+
+/* ========================================
+   卡片基礎樣式
+======================================== */
+.sidebar-card {
+    background: var(--sidebar-glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--sidebar-glass-border);
+    border-radius: 16px;
+    box-shadow: var(--sidebar-shadow);
+    transition: var(--sidebar-transition);
+    overflow: hidden;
+    min-height: 200px;
+}
+
+    .sidebar-card:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(20, 184, 166, 0.15);
+    }
+
+.sidebar-header {
+    background: linear-gradient(135deg, var(--sidebar-primary), var(--sidebar-primary-light));
+    color: white;
+    padding: 16px 20px;
+    font-weight: 600;
+    font-size: 15px;
+    text-align: center;
+    position: relative;
+}
+
+    .sidebar-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    }
+
+/* ========================================
+   用戶資訊區塊
+======================================== */
+.user-info-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.user-avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sidebar-primary), var(--sidebar-primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 3px 12px rgba(20, 184, 166, 0.3);
+}
+
+    .user-avatar i {
+        font-size: 28px;
+        color: white;
+    }
+
+.user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-details {
+    flex: 1;
+}
+
+.user-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--sidebar-text);
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-level {
+    font-size: 12px;
+    color: var(--sidebar-text-muted);
+    font-weight: 500;
+    padding: 2px 8px;
+    background: rgba(20, 184, 166, 0.1);
+    border-radius: 12px;
+    display: inline-block;
+}
+
+/* 統計數據 */
+.user-stats {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-top: 1px solid rgba(20, 184, 166, 0.1);
+    border-bottom: 1px solid rgba(20, 184, 166, 0.1);
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-number {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--sidebar-primary);
+    line-height: 1.2;
+    transition: var(--sidebar-transition);
+}
+
+    /* 統計數字更新動畫 */
+    .stat-number.stat-updated {
+        animation: statUpdate 0.6s ease-in-out;
+        color: #e11d48; /* 按讚時的紅色 */
+    }
+
+@keyframes statUpdate {
+    0% {
+        transform: scale(1);
+        color: var(--sidebar-primary);
+    }
+
+    30% {
+        transform: scale(1.3);
+        color: #e11d48;
+    }
+
+    60% {
+        transform: scale(1.1);
+        color: #e11d48;
+    }
+
+    100% {
+        transform: scale(1);
+        color: var(--sidebar-primary);
+    }
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--sidebar-text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* 操作按鈕 */
+.user-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    background: rgba(20, 184, 166, 0.1);
+    border: 1px solid var(--sidebar-glass-border);
+    border-radius: 8px;
+    color: var(--sidebar-primary);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: var(--sidebar-transition);
+}
+
+    .user-action-btn:hover {
+        background: rgba(20, 184, 166, 0.15);
+        color: var(--sidebar-primary);
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
+    }
+
+/* ========================================
+   訪客資訊區塊
+======================================== */
+.guest-info-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+}
+
+.guest-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(20, 184, 166, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--sidebar-glass-border);
+}
+
+    .guest-avatar i {
+        font-size: 32px;
+        color: var(--sidebar-primary);
+    }
+
+.guest-message h6 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sidebar-text);
+    margin-bottom: 8px;
+}
+
+.guest-message p {
+    font-size: 12px;
+    color: var(--sidebar-text-muted);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* 訪客按鈕 */
+.guest-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.guest-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: var(--sidebar-transition);
+}
+
+    .guest-action-btn.login-btn {
+        background: var(--sidebar-primary);
+        color: white;
+        border: 1px solid var(--sidebar-primary);
+        box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+    }
+
+        .guest-action-btn.login-btn:hover {
+            background: #0f766e;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4);
+        }
+
+    .guest-action-btn.register-btn {
+        background: rgba(20, 184, 166, 0.1);
+        color: var(--sidebar-primary);
+        border: 1px solid var(--sidebar-glass-border);
+    }
+
+        .guest-action-btn.register-btn:hover {
+            background: rgba(20, 184, 166, 0.15);
+            color: var(--sidebar-primary);
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
+        }
+
+/* ========================================
+   排行榜區塊
+======================================== */
+.ranking-content {
+    padding: 0 16px 16px 16px;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: var(--sidebar-transition);
+    cursor: pointer;
+    position: relative;
+}
+
+    .ranking-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, var(--sidebar-primary), var(--sidebar-primary-light));
+        opacity: 0;
+        transition: var(--sidebar-transition);
+    }
+
+    .ranking-item:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateX(4px);
+        border-color: rgba(20, 184, 166, 0.25);
+        box-shadow: 0 2px 8px rgba(20, 184, 166, 0.1);
+    }
+
+        .ranking-item:hover::before {
+            opacity: 1;
+        }
+
+/* 排名數字 */
+.rank-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--sidebar-primary), var(--sidebar-primary-light));
+    color: white;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(20, 184, 166, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+    /* 排名數字文字 */
+    .rank-number::after {
+        content: attr(data-rank);
+        position: absolute;
+        transition: var(--sidebar-transition);
+    }
+
+/* 前三名特殊效果 - 第1名金冠 */
+.ranking-item[data-rank="1"] .rank-number {
+    background: linear-gradient(135deg, #ffd700, #ff8c00, #ff6b35);
+    box-shadow: 0 3px 12px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    animation: crownGlow 2s ease-in-out infinite alternate;
+}
+
+    .ranking-item[data-rank="1"] .rank-number::before {
+        content: "👑";
+        position: absolute;
+        font-size: 16px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .ranking-item[data-rank="1"] .rank-number::after {
+        opacity: 0;
+    }
+
+/* 第2名銀牌 */
+.ranking-item[data-rank="2"] .rank-number {
+    background: linear-gradient(135deg, #c0c0c0, #a8a8a8, #8c8c8c);
+    box-shadow: 0 3px 10px rgba(192, 192, 192, 0.4), 0 0 15px rgba(192, 192, 192, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    animation: medalShine 3s ease-in-out infinite;
+}
+
+    .ranking-item[data-rank="2"] .rank-number::before {
+        content: "🥈";
+        position: absolute;
+        font-size: 16px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .ranking-item[data-rank="2"] .rank-number::after {
+        opacity: 0;
+    }
+
+/* 第3名銅牌 */
+.ranking-item[data-rank="3"] .rank-number {
+    background: linear-gradient(135deg, #cd7f32, #b8860b, #a0522d);
+    box-shadow: 0 3px 10px rgba(205, 127, 50, 0.4), 0 0 15px rgba(205, 127, 50, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    animation: medalShine 3.5s ease-in-out infinite;
+}
+
+    .ranking-item[data-rank="3"] .rank-number::before {
+        content: "🥉";
+        position: absolute;
+        font-size: 16px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .ranking-item[data-rank="3"] .rank-number::after {
+        opacity: 0;
+    }
+
+/* 動畫效果 */
+@keyframes crownGlow {
+    0% {
+        box-shadow: 0 3px 12px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3);
+        transform: scale(1);
+    }
+
+    100% {
+        box-shadow: 0 4px 16px rgba(255, 215, 0, 0.7), 0 0 30px rgba(255, 215, 0, 0.5);
+        transform: scale(1.05);
+    }
+}
+
+@keyframes medalShine {
+    0%, 100% {
+        filter: brightness(1) contrast(1);
+    }
+
+    50% {
+        filter: brightness(1.2) contrast(1.1);
+    }
+}
+
+/* 第4-5名特殊樣式 */
+.ranking-item[data-rank="4"] .rank-number,
+.ranking-item[data-rank="5"] .rank-number {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 前三名 hover 效果增強 */
+.ranking-item[data-rank="1"]:hover .rank-number {
+    animation-duration: 1s;
+    transform: scale(1.1) rotate(5deg);
+}
+
+.ranking-item[data-rank="2"]:hover .rank-number,
+.ranking-item[data-rank="3"]:hover .rank-number {
+    transform: scale(1.1) rotate(-3deg);
+    filter: brightness(1.3) contrast(1.2);
+}
+
+/* 第4-5名 hover 效果 */
+.ranking-item[data-rank="4"]:hover .rank-number,
+.ranking-item[data-rank="5"]:hover .rank-number {
+    transform: scale(1.1);
+    filter: brightness(1.2) saturate(1.3);
+}
+
+/* 排名 Tooltip 效果 - 使用偽元素 */
+.ranking-item[data-rank="1"] .rank-number:hover::after {
+    content: "👑 冠軍";
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 140, 0, 0.95));
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    z-index: 100;
+    animation: tooltipFadeIn 0.3s ease;
+}
+
+.ranking-item[data-rank="2"] .rank-number:hover::after {
+    content: "🥈 亞軍";
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.95), rgba(168, 168, 168, 0.95));
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    z-index: 100;
+    animation: tooltipFadeIn 0.3s ease;
+}
+
+.ranking-item[data-rank="3"] .rank-number:hover::after {
+    content: "🥉 季軍";
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.95), rgba(184, 134, 11, 0.95));
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    z-index: 100;
+    animation: tooltipFadeIn 0.3s ease;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.rank-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.rank-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sidebar-text);
+    line-height: 1.4;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rank-meta {
+    font-size: 11px;
+    color: var(--sidebar-text-muted);
+    line-height: 1.3;
+    font-weight: 500;
+}
+
+/* ========================================
+   響應式設計 - 通用解決方案
+======================================== */
+
+/* 針對所有使用側邊欄的頁面進行響應式處理 */
+@media (max-width: 991px) {
+    /* 當螢幕小於 992px 時，強制所有包含側邊欄的欄位變為全寬 */
+    .row .col-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        order: -1; /* 將側邊欄移到頂部 */
+        margin-bottom: 1rem;
+    }
+
+    /* 主要內容區域也變為全寬 */
+    .row .col-9,
+    .row .col-7 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* 側邊欄在平板/手機版改為水平排列 */
+    .sidebar-left {
+        flex-direction: row !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 16px;
+        padding: 8px 0;
+        position: static !important;
+        /* 添加滑動提示樣式 */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(20, 184, 166, 0.3) transparent;
+    }
+
+        .sidebar-left::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .sidebar-left::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+
+        .sidebar-left::-webkit-scrollbar-thumb {
+            background: rgba(20, 184, 166, 0.4);
+            border-radius: 3px;
+        }
+
+            .sidebar-left::-webkit-scrollbar-thumb:hover {
+                background: rgba(20, 184, 166, 0.6);
+            }
+
+    .sidebar-card {
+        min-width: 220px;
+        flex-shrink: 0;
+    }
+}
+
+/* 平板尺寸優化 */
+@media (max-width: 992px) and (min-width: 769px) {
+    .sidebar-card {
+        min-width: 240px;
+    }
+
+        .sidebar-card.user-info-card {
+            min-height: 160px;
+        }
+
+        .sidebar-card.ranking-card {
+            min-height: 240px;
+        }
+}
+
+@media (max-width: 768px) {
+    /* 手機版側邊欄卡片大小調整 */
+    .sidebar-card {
+        min-width: 200px !important;
+        min-height: 140px;
+    }
+
+        .sidebar-card.user-info-card {
+            min-width: 180px !important;
+            min-height: 130px;
+        }
+
+        .sidebar-card.ranking-card {
+            min-width: 220px !important;
+            min-height: 200px;
+        }
+
+    /* 手機版用戶資訊調整 */
+    .user-avatar-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 6px;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        align-self: center;
+    }
+
+        .user-avatar i {
+            font-size: 20px;
+        }
+
+    .user-name {
+        font-size: 13px;
+    }
+
+    .user-level {
+        font-size: 11px;
+    }
+
+    .stat-number {
+        font-size: 14px;
+    }
+
+    .stat-label {
+        font-size: 10px;
+    }
+
+    /* 手機版訪客資訊調整 */
+    .guest-avatar {
+        width: 45px;
+        height: 45px;
+    }
+
+        .guest-avatar i {
+            font-size: 24px;
+        }
+
+    .guest-message h6 {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .guest-message p {
+        font-size: 11px;
+    }
+
+    /* 手機版排名項目調整 */
+    .rank-number {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+
+    .ranking-item[data-rank="1"] .rank-number::before,
+    .ranking-item[data-rank="2"] .rank-number::before,
+    .ranking-item[data-rank="3"] .rank-number::before {
+        font-size: 12px;
+    }
+
+    .rank-title {
+        font-size: 12px;
+    }
+
+    .rank-meta {
+        font-size: 10px;
+    }
+
+    .sidebar-header {
+        font-size: 14px;
+        padding: 12px 16px;
+    }
+
+    .user-info-content,
+    .guest-info-content {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .ranking-content {
+        padding: 0 12px 12px 12px;
+    }
+
+    .ranking-item {
+        padding: 8px 10px;
+        margin-bottom: 6px;
+    }
+}
+
+/* 極小螢幕優化 (320px-480px) */
+@media (max-width: 480px) {
+    .sidebar-card {
+        min-width: 160px !important;
+        min-height: 120px;
+    }
+
+        .sidebar-card.user-info-card {
+            min-width: 150px !important;
+            min-height: 110px;
+        }
+
+        .sidebar-card.ranking-card {
+            min-width: 180px !important;
+            min-height: 160px;
+        }
+
+    .sidebar-header {
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+    }
+
+        .user-avatar i {
+            font-size: 18px;
+        }
+
+    .guest-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+        .guest-avatar i {
+            font-size: 20px;
+        }
+}
+
+/* ========================================
+   載入動畫
+======================================== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sidebar-card {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+    .sidebar-card:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .sidebar-card:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .sidebar-card:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+/* ========================================
+   無障礙支援
+======================================== */
+.ranking-item:focus {
+    outline: 2px solid var(--sidebar-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-card,
+    .ranking-item {
+        animation: none;
+        transition: none;
+    }
+
+        .ranking-item:hover,
+        .sidebar-card:hover {
+            transform: none;
+        }
+}
+
+/* ========================================
+   熱門文章連結樣式
+======================================== */
+.ranking-item-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+}
+
+    .ranking-item-link:hover {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .ranking-item-link:focus {
+        outline: 2px solid var(--sidebar-primary);
+        outline-offset: 2px;
+        border-radius: 10px;
+    }
+
+/* 點擊效果 */
+.ranking-item:active {
+    transform: translateX(2px) scale(0.98);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================
+   追蹤者列表樣式
+======================================== */
+.followers-card {
+    background: var(--sidebar-glass-bg);
+    border: 1px solid var(--sidebar-glass-border);
+}
+
+.followers-content {
+    padding: 0 16px;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.follower-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(20, 184, 166, 0.1);
+    transition: var(--sidebar-transition);
+    cursor: pointer;
+}
+
+.follower-item:last-child {
+    border-bottom: none;
+}
+
+.follower-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.follower-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(20, 184, 166, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.follower-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.follower-avatar i {
+    font-size: 20px;
+    color: var(--sidebar-primary);
+}
+
+.follower-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.follower-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sidebar-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 2px;
+}
+
+.follower-meta {
+    font-size: 11px;
+    color: var(--sidebar-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mutual-follow-indicator {
+    color: var(--sidebar-primary);
+    font-weight: 500;
+}
+
+.followers-view-all {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(20, 184, 166, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.view-all-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--sidebar-primary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    transition: var(--sidebar-transition);
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.view-all-link:hover {
+    background: rgba(20, 184, 166, 0.1);
+    color: var(--sidebar-primary);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.view-all-link i {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.view-all-link:hover i {
+    transform: translateX(2px);
+}

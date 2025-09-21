@@ -1,0 +1,71 @@
+﻿@using BoardGameFontier.Constants
+@using BoardGameFontier.Services
+@using Microsoft.AspNetCore.Http
+@inject ICurrentUserService CurrentUser
+
+@{
+
+    var isLogging = User.Identity.IsAuthenticated;
+    var userName = User.Identity?.Name;
+    //下面是從資料庫撈
+    var displayName = await CurrentUser.GetUserDisplayNameAsync();
+}
+
+<style>
+    li {
+        list-style: none;
+    }
+
+    .user-btn {
+    }
+
+    .LogOutBtn {
+    }
+
+    .user-btn:hover,
+    .user-btn:focus,
+    .user-btn:active /*←這是點下去的瞬間，對應下面的outline,box-shadow*/ {
+        background: rgba(255,255,255,0.18); /* 白色透明度 0.18，可調整 */
+        transition: background 0.2s;
+        outline: none !important; /*注意，15行16行不能拿掉，不然點按鈕時的時候會很醜*/
+        box-shadow: none !important;
+    }
+</style>
+<div class="d-flex align-items-center">
+    @if (isLogging)
+    {
+        <div class="dropdown">   <!--data-這個是為了簡單塞東西給js那端用-->
+            <a class="btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                歡迎 <span id="nav-user" data-username="@User?.Identity?.Name">  @(string.IsNullOrWhiteSpace(displayName) ? userName : displayName)</span>
+            </a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" asp-controller="Member" asp-action="IndexMember">我的頁面</a></li>
+                <li><a class="dropdown-item" asp-controller="Chat" asp-action="MyChat">收信匣</a></li>
+                @{
+                    if (User.IsInRole(UserRolesLevel.Admin))
+                    {
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Analyze">後臺管理</a></li> @*有"管理員"這個身分的人才會顯示*@
+                    }
+                    if (User.IsInRole(UserRolesLevel.Manufacturer))
+                    {
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Manufacturer" asp-action="Facturer">銷貨報表</a></li> @*有"廠商"這個身分的人才會顯示*@
+                    }
+                }                
+                <li>
+                    <hr class="dropdown-divider" />
+                </li>
+                <li>
+                    <form asp-controller="Login" asp-action="Logout" method="post" class="d-flex justify-content-center">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">登出</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    }
+    else
+    {
+        <a href="/Login/IndexLogin" class="btn btn-outline-light me-2">登入</a>
+        <a href="/Login/Register" class="btn btn-outline-light me-2">註冊</a>
+    }
+</div>

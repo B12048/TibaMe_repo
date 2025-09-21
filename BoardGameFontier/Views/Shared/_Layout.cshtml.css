@@ -1,0 +1,24 @@
+﻿/* Layout 專用樣式 - CSS Isolation
+   這些樣式只會作用在 _Layout.cshtml 上 */
+
+/* 導航品牌樣式 */
+a.navbar-brand {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+/* Layout 專用陰影效果 */
+.box-shadow {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+/* 頁腳樣式 */
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+

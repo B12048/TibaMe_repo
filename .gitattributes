@@ -1,0 +1,24 @@
+# C# and Razor pages
+*.cs      text eol=lf
+*.cshtml  text eol=lf
+
+# Web assets
+*.js      text eol=lf
+*.css     text eol=lf
+*.json    text eol=lf
+*.html    text eol=lf
+*.xml     text eol=lf
+
+# Documentation and configuration
+*.md      text eol=lf
+*.txt     text eol=lf
+*.yml     text eol=lf
+
+# Git files
+.gitattributes text eol=lf
+.gitignore     text eol=lf
+
+# Add a rule for binary files to prevent them from being treated as text
+*.png     binary
+*.jpg     binary
+*.dll     binary

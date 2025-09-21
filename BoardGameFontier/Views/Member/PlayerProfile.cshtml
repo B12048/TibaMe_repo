@@ -1,0 +1,26 @@
+﻿@model MemberIndexViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var viewingName = string.IsNullOrWhiteSpace(Model.DisplayName) ? Model.UserName : Model.DisplayName;
+}
+
+<div class="w-100 d-flex justify-content-center mt-2">
+    <div class="bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-1 shadow-sm small d-inline-block">
+        這是：<strong>@viewingName</strong> 的個人頁 <!--strong裡面字加粗-->
+    </div>
+</div>
+<div class="main-container d-grid" style="grid-template-columns: 1fr 3fr 1fr; min-height: 100vh;">
+
+    <!-- 左側：可重用的社群側欄 -->
+    <div class="sidebar bg-white border-end px-3 pt-4">
+        <partial name="~/Views/Shared/Partials/_CommunityLeftSidebar.cshtml" />
+    </div>
+
+    <!-- 中間：使用者資訊 -->
+    <div class="content px-3 py-4">
+        <partial name="~/Views/Member/_Profile.cshtml" model="Model" />
+    </div>
+
+    <!-- 右側：留白 -->
+    <div class="right px-3 pt-4 d-none d-lg-block"></div>
+</div>

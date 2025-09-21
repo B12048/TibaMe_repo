@@ -1,0 +1,48 @@
+﻿@model MemberIndexViewModel
+
+<div class="card">
+    <div class="row g-0 ps-3">
+        <div class="col-md-4 overflow-hidden d-flex rounded-5">
+            <!--若無上傳圖片的這個圖顯示不出來-->
+            <img class=" rounded-circle d-block mx-auto"
+                 src="@(string.IsNullOrWhiteSpace(Model.ProfilePictureUrl) ? Url.Content("~/img/noPortrait.png") : Model.ProfilePictureUrl)"
+                 style="width:200px; height:200px; object-fit:cover;"/>
+
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h4 class="card-title">
+                    暱稱:
+                    @(string.IsNullOrWhiteSpace(Model.DisplayName) ? "暫無" : Model.DisplayName)
+                </h4>
+                <p class="card-text">
+                    所在地：
+                    @(string.IsNullOrWhiteSpace(Model.City) ? "暫無" : Model.City)
+                 </p>
+                <p class="card-text"><small class="text-body-secondary">@Model.UserName</small></p>
+                @if (Model.BoardGameTags != null && Model.BoardGameTags.Any()) @*Any()是確保至少有一筆資料時才顯示 *@
+                {
+                    <div class="mb-3">
+                        <span class="fw-bold">桌遊偏好：</span>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            @foreach (var tag in Model.BoardGameTags)
+                            {
+                                <span class="badge bg-success px-3 py-2">@tag</span>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <span class="fw-bold">桌遊偏好：暫無</span>
+                    </div>
+                }
+                <div class="mb-3">
+                    <span class="fw-bold">自我介紹：</span>
+                    <div> @(string.IsNullOrWhiteSpace(Model.Bio) ? "各位大大安安，我是新人玩家" : Model.Bio)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

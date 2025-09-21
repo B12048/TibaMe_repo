@@ -1,0 +1,46 @@
+﻿@model PrivateChatViewModel
+<input type="hidden" id="hiddenUserId" value="@Model.UserId" />
+
+<div class=" container">
+    <div class="list-group">
+        <a href="#" class="list-group-item list-group-item-action">
+            The current link item
+            <span class="badge text-bg-primary rounded-pill">14</span>
+        </a>
+        <a href="#" class="list-group-item list-group-item-action">A second link item
+            <span class="badge text-bg-primary rounded-pill">14</span>
+        </a>
+        <a href="#" class="list-group-item list-group-item-action">A third link item
+            <span class="badge text-bg-primary rounded-pill">14</span>
+        </a>
+        <a href="#" class="list-group-item list-group-item-action">A fourth link item
+            <span class="badge text-bg-primary rounded-pill">14</span>
+        </a>
+    </div>
+
+    <ul id="messagesList" class="bg-white p-5">
+        <li>
+            <img src=""/>
+            <div>
+                <span>2025/08/05 下午09:32分</span>
+                <p>訊息訊息</p>
+            </div>
+        </li>
+        <li>
+            <img src="" />
+            <div>
+                <span>2025/08/05 下午09:32分</span>
+                <p>訊息訊息</p>
+            </div>
+        </li>
+    </ul>
+    <div class="row mt-4">
+        <div class="col-10">
+            <label for="exampleTextarea" class="form-label">請輸入訊息</label>
+            <textarea class="form-control" id="exampleTextarea" rows="2"></textarea>
+        </div>
+        <button class="btn btn-primary col-2">發送</button>
+    </div>
+</div>
+
+<script src="~/js/privatechat.js"></script>

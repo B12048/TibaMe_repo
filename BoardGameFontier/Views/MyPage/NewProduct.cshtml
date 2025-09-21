@@ -1,0 +1,190 @@
+﻿<div class="container position-relative mt-4">
+    <h4 class="text-center border p-2">新增商品</h4>
+
+    <div class="card shadow p-4 mt-4" style="background-color: #f8f9fa;">
+        <div class="container" style="max-width: 1000px;">
+
+            <!-- 表單開始 -->
+            <form id="createForm">
+                <div class="row form-section">
+
+                    <!-- 商品圖片 -->
+                    <div class="col-md-3">
+                        <label class="form-label">商品圖片 <span class="required">*</span></label>
+                        <div id="image-preview-container" class="d-flex flex-wrap gap-2 mb-2"></div>
+                        <input type="file" id="image-upload" class="form-control" accept="image/*" multiple onchange="previewMultipleImages(event)">
+                        <div id="upload-error" class="text-danger mt-1" style="display:none;"></div>
+                    </div>
+
+                    <!-- 商品名稱與描述 -->
+                    <div class="col-md-9">
+                        <div class="mb-3">
+                            <label class="form-label">商品名稱 <span class="required">*</span></label>
+                            <input type="text" class="form-control" name="ProductName" placeholder="請輸入商品名稱" required>
+                        </div>
+                        <div>
+                            <label class="form-label">商品描述 <span class="required">*</span></label>
+                            <textarea class="form-control" name="Description" rows="2" placeholder="請輸入商品描述" required></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 價格與分類 -->
+                    <div class="col-md-6 mt-3">
+                        <label class="form-label">價格 <span class="required">*</span></label>
+                        <input type="number" class="form-control" name="Price" placeholder="請輸入商品金額" required>
+                    </div>
+
+                    <div class="col-md-6 mt-3">
+                        <label class="form-label">商品分類 <span class="required">*</span></label>
+                        <select class="form-select" name="Category" required>
+                            <option selected disabled>請選擇分類</option>
+                            <option value="1">家庭遊戲</option>
+                            <option value="2">派對遊戲</option>
+                            <option value="3">兒童遊戲</option>
+                            <option value="4">玩家遊戲</option>
+                            <option value="5">卡牌遊戲</option>
+                            <option value="6">雙人遊戲</option>
+                        </select>
+                    </div>
+
+                    <!-- 庫存數量 -->
+                    <div class="col-md-6 mt-3">
+                        <label class="form-label">庫存數量 <span class="required">*</span></label>
+                        <input type="number" class="form-control" name="StockQuantity" placeholder="請輸入商品庫存數量" required>
+                    </div>
+
+                </div>
+
+                <br />
+                <div class="text-center">
+                    <button type="button" class="btn btn-outline-secondary" onclick="submitForm()">新增商品</button>
+                </div>
+            </form>
+            <!-- 表單結束 -->
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .preview-image-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .preview-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .delete-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        line-height: 17px;
+        text-align: center;
+        padding: 0;
+    }
+
+        .delete-btn:hover {
+            background-color: red;
+        }
+</style>
+
+<script>
+    let uploadedImages = [];
+    const maxImages = 10;
+
+    function previewMultipleImages(event) {
+        const files = Array.from(event.target.files);
+        const previewContainer = document.getElementById('image-preview-container');
+        const errorContainer = document.getElementById('upload-error');
+
+        let availableSlots = maxImages - uploadedImages.length;
+
+        if (files.length > availableSlots) {
+            errorContainer.textContent = `最多只能上傳 ${maxImages} 張圖片，您已上傳 ${uploadedImages.length} 張。`;
+            errorContainer.style.display = 'block';
+        } else {
+            errorContainer.style.display = 'none';
+        }
+
+        const validFiles = files.slice(0, availableSlots);
+
+        validFiles.forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'preview-image-wrapper';
+
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'preview-image';
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.className = 'delete-btn';
+
+                deleteBtn.onclick = function() {
+                    wrapper.remove();
+                    uploadedImages = uploadedImages.filter(i => i !== file);
+                    errorContainer.style.display = 'none';
+                };
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(deleteBtn);
+                previewContainer.appendChild(wrapper);
+
+                uploadedImages.push(file);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 不清空 input，避免表單送出沒有檔案
+        // event.target.value = '';
+    }
+
+    function submitForm() {
+        const form = document.getElementById('createForm');
+        const formData = new FormData(form);
+
+        // 將 JS 暫存的圖片加入 FormData
+        uploadedImages.forEach(file => formData.append("Images", file));
+
+        fetch("/api/product/createProduct", {
+            method: "POST",
+            body: formData
+        }).then(res => {
+             if (res.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '商品新增成功',
+                        confirmButtonText: '確認'
+                    }).then(() => {
+                        window.location.href = "/Member/IndexMember?action=productManage";
+                    });
+                } else {
+                    res.text().then(txt => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '上傳失敗',
+                            text: txt
+                        });
+                    });
+                }
+        }).catch(err => console.error(err));
+    }
+</script>

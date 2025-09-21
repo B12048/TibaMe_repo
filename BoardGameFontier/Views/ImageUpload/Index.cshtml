@@ -1,0 +1,30 @@
+﻿<form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="file" />
+    <button type="submit">Upload</button>
+</form>
+
+
+@section Scripts{
+
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const response = await fetch('/api/imageupload/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            const img = document.createElement('img');
+            img.src = result.url;
+            document.body.appendChild(img);
+        } else {
+            alert("上傳失敗：" + result.error);
+        }
+    });
+</script>
+
+}

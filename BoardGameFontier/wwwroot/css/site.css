@@ -1,0 +1,218 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+.sidebar ul li {
+    font-size: 16px;
+    color: #55b3a5;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    padding-left: 0;
+    list-style: none;
+}
+
+.sidebar ul li:hover {
+    color: #2b7a6b;
+}
+
+.sidebar {
+    background-color: #ffffff;
+    padding: 40px 20px 20px;
+    border-right: 1px solid #eee;
+}
+
+/* ================================
+   網站整體樣式
+   ================================ */
+
+/* 設定整個網站的字體為思源黑體 */
+* {
+    font-family: 'Noto Sans TC';
+}
+
+/* ================================
+   導航列樣式
+   ================================ */
+
+.custom-nav-link {
+    border-right: solid 1px white;
+    width: 5vw;
+    text-align: center;
+}
+
+.custom-nav-link:hover {
+    background: linear-gradient(to top, #A0D4C5, transparent);
+}
+
+.custom-navbar-nav a:last-child {
+    border: 0px;
+}
+
+/* 響應式導航列修正 */
+@media (max-width: 991px) {
+    .custom-nav-link {
+        width: auto !important;
+        min-width: 80px;
+        flex: 1;
+        border-right: none;
+        border-bottom: solid 1px rgba(255, 255, 255, 0.3);
+        padding: 12px 8px;
+    }
+    
+    .custom-navbar-nav {
+        flex-direction: column !important;
+        width: 100%;
+    }
+    
+    .custom-navbar-nav a:last-child {
+        border-bottom: none;
+    }
+    
+    .navbar-collapse {
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .custom-nav-link {
+        min-width: 60px;
+        padding: 10px 6px;
+        font-size: 14px;
+    }
+}
+
+/* ================================
+   標題按鈕樣式
+   ================================ */
+
+.titleButton {
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.titleButton a {
+    margin: 0 auto;
+    line-height: 1.5vh;
+}
+
+.titleButton:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 1px;
+    background-color: white;
+    transition: all 0.5s;
+}
+
+.titleButton:hover:before {
+    left: 0;
+}
+
+.titleButton:after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: -100%;
+    width: 100%;
+    height: 1px;
+    background-color: white;
+    transition: all 0.5s;
+}
+
+.titleButton:hover:after {
+    right: 0;
+}
+
+.titleButton:hover .ndEle:after {
+    bottom: 0;
+}
+
+/* ================================
+   背景與布局樣式
+   ================================ */
+
+.bgimg {
+    background-image: url('/img/bgf_bg.png');
+    background-repeat: repeat;
+    background-attachment: fixed;
+    background-position: top left;
+    background-size: auto;
+    min-height: 100vh;
+}
+
+/* 主要容器樣式 */
+.main-wrapper {
+    max-width: 1400px; /* 設定最大寬度 */
+    width: 100%; /* 寬度為100%但不超過max-width */
+    margin: 0 auto;
+    padding: 0 10px;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .main-wrapper {
+        padding: 0 10px; /* 手機上減少內邊距 */
+    }
+}
+
+/* ================================
+   全站通用樣式 (從 _Layout.cshtml.css 移過來)
+   ================================ */
+
+/* 連結樣式 */
+a {
+    color: #0077cc;
+}
+
+/* 按鈕樣式 */
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+/* 導航樣式 */
+.nav-pills .nav-link.active, 
+.nav-pills .show > .nav-link {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+/* 邊框樣式 */
+.border-top {
+    border-top: 1px solid #e5e5e5;
+
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* 接受政策按鈕 */
+button.accept-policy {
+    font-size: 1rem;
+    line-height: inherit;
+}

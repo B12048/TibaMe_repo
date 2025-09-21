@@ -1,0 +1,170 @@
+﻿@{
+    ViewData["Title"] = "會員管理";
+}
+
+<div class="container-fluid">
+    <div class="row d-flex flex-grow-1">
+        @Html.Partial("_AdminSidebar")
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div id="contactApp">
+                <div class="d-flex align-items-center mt-4 mb-3">
+                    <h2 class="me-3 mb-0 flex-shrink-0">會員管理</h2>
+
+                    <div class="d-flex flex-grow-1">
+                        <input class="form-control me-2"
+                               type="search"
+                               placeholder="Search"
+                               v-model="searchText"
+                               @@keyup.enter="searchMembers" />
+                        <button class="btn btn-outline-success" @@click="searchMembers">
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-3">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>帳號</th>
+                                <th>狀態</th>
+                                <th>角色</th>
+                                <th>Email</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="member in members" :key="member.id">
+                                <td>{{ member.display }}</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               :checked="member.lockoutEnabled"
+                                               @@change="updateMemberLockout(member.id, $event.target.checked)" />
+                                    </div>
+                                </td>
+                                <td>
+                                    <select class="form-select"
+                                            v-model="member.roles"
+                                            @@change="updateMemberRole(member.id, member.roles)">
+                                        <option value="Admin">Admin</option>
+                                        <option value="User">User</option>
+                                         <option value="Manufacturer">Manufacturer</option>
+                                    </select>
+                                </td>
+                                <td>{{ member.userName }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://unpkg.com/vue@3"></script>
+<script>
+    const app = Vue.createApp({
+        data() {
+            return {
+                members: [],
+                searchText: "",
+                pageSize: 10,
+                loading: false,
+                allLoaded: false,
+                skip: 0,
+            };
+        },
+        mounted() {
+            this.loadMoreMembers();
+            window.addEventListener("scroll", this.handleScroll);
+        },
+        beforeUnmount() {
+            window.removeEventListener("scroll", this.handleScroll);
+        },
+        methods: {
+            loadMoreMembers() {
+                if (this.loading || this.allLoaded) return;
+                this.loading = true;
+
+                const bodydata = {
+                    searchText: this.searchText,
+                    skip: this.skip,
+                    take: this.pageSize,
+                };
+
+                fetch("/api/admin/allusers", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(bodydata),
+                })
+                    .then((res) => res.json())
+                    .then((data) => {
+                        if (data.length < this.pageSize) {
+                            this.allLoaded = true;
+                        }
+                        this.members.push(...data);
+                        this.skip += this.pageSize;
+                    })
+                    .catch((err) => {
+                        console.error("取得會員資料失敗：", err);
+                    })
+                    .finally(() => {
+                        this.loading = false;
+                    });
+            },
+            handleScroll() {
+                const scrollBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.body.offsetHeight - 50;
+                if (scrollBottom) {
+                    this.loadMoreMembers();
+                }
+            },
+            searchMembers() {
+                this.members = [];
+                this.skip = 0;
+                this.allLoaded = false;
+                this.loadMoreMembers();
+            },
+            updateMemberLockout(id, lockoutEnabled) {
+                fetch("/api/admin/updateLockout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, lockoutEnabled }) 
+                })
+                    .then((response) => {
+                        if (!response.ok) throw new Error("更新鎖定狀態失敗");
+                        return response.json();
+                    })
+                    .then((data) => {
+                        console.log("鎖定狀態更新成功", data);
+                    })
+                    .catch((error) => {
+                        console.error("錯誤：", error);
+                        alert("更新鎖定狀態失敗，請稍後再試");
+                    });
+            },
+            updateMemberRole(id, role) {
+                fetch("/api/admin/updateRole", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, role }),
+                })
+                    .then((response) => {
+                        if (!response.ok) throw new Error("更新角色失敗");
+                        return response.json();
+                    })
+                    .then((data) => {
+                        console.log("角色更新成功", data);
+                    })
+                    .catch((error) => {
+                        console.error("錯誤：", error);
+                        alert("更新角色失敗，請稍後再試");
+                    });
+            },
+        },
+    });
+
+    app.mount("#contactApp");
+</script>

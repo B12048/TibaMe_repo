@@ -1,0 +1,756 @@
+@using BoardGameFontier.Models.ViewModels
+@model MyPostsViewModel
+
+<!-- 個人貼文管理頁面 -->
+@Html.AntiForgeryToken()
+<!-- 載入中提示 -->
+<div id="myPostLoading" class="container mt-4 text-center">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">載入中...</span>
+    </div>
+    <p class="mt-2">載入我的貼文資料中...</p>
+</div>
+
+<div id="myPostPage" class="container position-relative mt-4" v-cloak>
+
+    <!-- 頁面標題與統計資訊 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="text-center border p-2 mb-3">我的貼文管理</h4>
+            
+            <!-- 統計儀表板 -->
+            <div class="row text-center mb-3">
+                <div class="col-6 col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body py-2">
+                            <h6 class="mb-0">{{ stats.totalPosts || 0 }}</h6>
+                            <small>總貼文數</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body py-2">
+                            <h6 class="mb-0">{{ stats.totalLikes || 0 }}</h6>
+                            <small>總獲讚數</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body py-2">
+                            <h6 class="mb-0">{{ stats.totalComments || 0 }}</h6>
+                            <small>總回應數</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body py-2">
+                            <h6 class="mb-0">{{ stats.postsWithNewResponses || 0 }}</h6>
+                            <small>待回覆數</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 篩選與搜尋區域 -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                        <!-- 類型篩選 -->
+                        <div class="col-6 col-md-3">
+                            <select v-model="filterOptions.filterType" v-on:change="applyFilter" class="form-select form-select-sm">
+                                <option value="">所有類型</option>
+                                <option value="0">心得分享</option>
+                                <option value="1">詢問求助</option>
+                                <option value="2">二手交易</option>
+                                <option value="3">創作展示</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 排序方式 -->
+                        <div class="col-6 col-md-3">
+                            <select v-model="filterOptions.sortOrder" v-on:change="applyFilter" class="form-select form-select-sm">
+                                <option value="CreatedDesc">最新發布</option>
+                                <option value="UpdatedDesc">最近更新</option>
+                                <!-- ✅ 移除「最受歡迎」排序，因為觀看次數沒有實際記數 -->
+                                <option value="CommentsDesc">最多回應</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 搜尋框 -->
+                        <div class="col-12 col-md-6 mt-2 mt-md-0">
+                            <div class="input-group">
+                                <input 
+                                    v-model="filterOptions.searchKeyword" 
+                                    v-on:keyup.enter="applyFilter"
+                                    type="search" 
+                                    class="form-control form-control-sm" 
+                                    placeholder="搜尋標題或內容...">
+                                <button v-on:click="applyFilter" class="btn btn-outline-secondary btn-sm" type="button">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入狀態 -->
+    <div v-if="isLoading" class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">載入中...</span>
+        </div>
+        <p class="mt-2 text-muted">載入中...</p>
+    </div>
+
+    <!-- 貼文列表 -->
+    <div v-else-if="myPosts.length > 0">
+        <div class="row g-3">
+            <div class="col-12" v-for="post in myPosts" :key="post.id">
+                <div :class="`card border-start border-4 ${getPostBorderClass(post.type)}`">
+                    <div class="card-body">
+                        <!-- 貼文標題列 -->
+                        <div class="row align-items-center mb-2">
+                            <div class="col">
+                                <div class="d-flex align-items-center">
+                                    <span :class="`badge me-2 ${getPostTypeClass(post.type)}`">
+                                        {{ getPostTypeText(post.type) }}
+                                    </span>
+                                    <h6 class="mb-0">{{ post.title }}</h6>
+                                    <!-- 新回應提示 -->
+                                    <span v-if="post.hasNewResponses" class="badge bg-danger ms-2">
+                                        {{ post.newResponseCount }} 新回應
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                            type="button" data-bs-toggle="dropdown">
+                                        操作
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" v-on:click="viewPost(post.id)">
+                                                <i class="bi bi-eye me-2"></i>查看
+                                            </a>
+                                        </li>
+                                        <li v-if="post.permissions.canEdit">
+                                            <a class="dropdown-item" v-on:click="editPost(post)">
+                                                <i class="bi bi-pencil me-2"></i>編輯
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" v-on:click="handleDeleteClick(post)">
+                                                <i class="bi bi-trash me-2"></i>刪除
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 貼文內容預覽 -->
+                        <p class="text-muted mb-2">{{ post.contentPreview }}</p>
+
+                        <!-- 交易價格（僅交易型貼文） -->
+                        <div v-if="post.type === 2 && post.price" class="mb-2">
+                            <span class="badge bg-success">售價：NT$ {{ post.price }}</span>
+                        </div>
+
+                        <!-- 相關桌遊 -->
+                        <div v-if="post.relatedGame" class="mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-controller me-1"></i>
+                                相關桌遊：{{ post.relatedGame.name }}
+                            </small>
+                        </div>
+
+                        <!-- 貼文統計與時間 -->
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="d-flex align-items-center text-muted">
+                                    <small class="me-3">
+                                        <i class="bi bi-heart me-1"></i>{{ post.stats.likeCount }}
+                                    </small>
+                                    <small class="me-3">
+                                        <i class="bi bi-chat me-1"></i>{{ post.stats.commentCount }}
+                                    </small>
+                                    <small class="me-3">
+                                        <!-- ✅ 移除觀看次數顯示 -->
+                                    </small>
+                                    <small>
+                                        {{ formatDate(post.createdAt) }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 最近回應（如果有的話） -->
+                        <div v-if="post.recentResponses && post.recentResponses.length > 0" class="mt-3">
+                            <hr class="my-2">
+                            <h6 class="mb-2">最近回應</h6>
+                            <div class="bg-light p-2 rounded">
+                                <div v-for="response in post.recentResponses.slice(0, 3)" :key="response.id" class="mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <strong class="me-2">{{ response.author.displayName }}:</strong>
+                                        <small class="text-muted">{{ response.timeAgo }}</small>
+                                        <span v-if="response.isNew" class="badge bg-danger ms-2 small">新</span>
+                                    </div>
+                                    <p class="mb-0 small">{{ response.contentPreview }}</p>
+                                </div>
+                                <div v-if="post.recentResponses.length > 3">
+                                    <small class="text-muted">還有 {{ post.recentResponses.length - 3 }} 個回應...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分頁 -->
+        <div v-if="pagination.totalPages > 1" class="d-flex justify-content-center mt-4">
+            <nav>
+                <ul class="pagination">
+                    <li :class="{ 'page-item': true, disabled: pagination.currentPage === 1 }">
+                        <a class="page-link" v-on:click="goToPage(pagination.currentPage - 1)">上一頁</a>
+                    </li>
+                    <li v-for="page in getPageNumbers()" :key="page" 
+                        :class="{ 'page-item': true, active: page === pagination.currentPage }">
+                        <a class="page-link" v-on:click="goToPage(page)">{{ page }}</a>
+                    </li>
+                    <li :class="{ 'page-item': true, disabled: pagination.currentPage === pagination.totalPages }">
+                        <a class="page-link" v-on:click="goToPage(pagination.currentPage + 1)">下一頁</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 空狀態 -->
+    <div v-else class="text-center py-5">
+        <i class="bi bi-journal-x display-1 text-muted"></i>
+        <h5 class="mt-3 text-muted">還沒有貼文</h5>
+        <p class="text-muted">開始分享您的桌遊心得吧！</p>
+        <button class="btn btn-primary" v-on:click="goToCreatePost">
+            <i class="bi bi-plus-circle me-2"></i>發表貼文
+        </button>
+    </div>
+
+    <!-- 固定按鈕 -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <div class="d-flex flex-column gap-2">
+            <button class="btn btn-primary rounded-circle" 
+                    style="width: 50px; height: 50px;"
+                    v-on:click="goToCreatePost"
+                    title="發表新貼文">
+                <i class="bi bi-plus"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 編輯貼文 Modal -->
+<div class="modal fade" id="editPostModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">編輯貼文</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editPostForm">
+                    <!-- 貼文類型 -->
+                    <div class="mb-3">
+                        <label class="form-label">貼文類型</label>
+                        <select v-model="editForm.type" class="form-select" id="postTypeSelect">
+                            <option value="0">心得分享</option>
+                            <option value="1">詢問求助</option>
+                            <option value="2">二手交易</option>
+                            <option value="3">創作展示</option>
+                        </select>
+                        <div v-if="editForm.hasComments" class="form-text text-muted">
+                            已有回覆的貼文無法修改類型
+                        </div>
+                    </div>
+
+                    <!-- 標題 -->
+                    <div class="mb-3">
+                        <label class="form-label">標題</label>
+                        <input v-model="editForm.title" type="text" class="form-control" 
+                               placeholder="請輸入標題" maxlength="200">
+                        <div class="form-text">最多 200 個字元</div>
+                    </div>
+
+                    <!-- 內容 -->
+                    <div class="mb-3">
+                        <label class="form-label">內容 <span class="text-danger">*</span></label>
+                        <textarea v-model="editForm.content" class="form-control" rows="6" 
+                                  placeholder="請輸入內容" maxlength="5000" required></textarea>
+                        <div class="form-text">最多 5000 個字元</div>
+                    </div>
+
+                    <!-- 圖片編輯功能 -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-image me-2"></i>貼文圖片
+                            <small class="text-muted">(最多5張，每張限制2MB)</small>
+                        </label>
+                        
+                        <!-- 圖片預覽容器：由 edit-post-handler.js 全權管理 -->
+                        <div class="mb-3">
+                            <div class="row g-2" id="editImagePreview">
+                                <!-- 內容由 JavaScript 動態生成 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 隱藏的檔案輸入框：由 handler 觸發 -->
+                        <input type="file" 
+                               id="editImageInput" 
+                               accept="image/*" 
+                               multiple 
+                               style="display: none;">
+                    </div>
+
+                    <!-- 交易相關欄位（僅交易類型顯示） -->
+                    <div id="tradeFields" style="display: none;">
+                        <hr>
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-currency-exchange me-2"></i>交易資訊
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">售價</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">NT$</span>
+                                    <input v-model.number="editForm.price" type="number" 
+                                           class="form-control" placeholder="0" min="0" max="999999">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">交易地點 <span class="text-danger">*</span></label>
+                                <input v-model="editForm.tradeLocation" type="text" 
+                                       class="form-control" placeholder="請輸入交易地點" maxlength="100">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <label class="form-label">交易備註</label>
+                            <textarea v-model="editForm.tradeNotes" class="form-control" rows="3" 
+                                      placeholder="可填寫交易相關注意事項" maxlength="500"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 驗證錯誤訊息 -->
+                    <div id="editFormErrors" style="display: none;" class="alert alert-danger">
+                        <ul class="mb-0" id="editFormErrorList">
+                        </ul>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="savePostButton" onclick="handleSavePostEdit()">
+                    <span id="saveButtonSpinner" style="display: none;" class="spinner-border spinner-border-sm me-2"></span>
+                    儲存變更
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 刪除確認 Modal -->
+<div class="modal fade" id="deletePostModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">確認刪除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>確定要刪除貼文「<strong id="deletePostTitle"></strong>」嗎？</p>
+                <p class="text-muted small">此操作無法復原。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="deleteConfirmButton" onclick="handleDeleteConfirm()">
+                    <span id="deleteButtonSpinner" style="display: none;" class="spinner-border spinner-border-sm me-2"></span>
+                    確認刪除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Vue.js 初始化 -->
+<script>
+    // ✅ 優化：從伺服器端獲取預載資料
+    const serverInitialData = @Html.Raw(ViewBag.InitialData ?? "{}"); // 正確處理預載資料
+    
+    // MyPost Vue 應用初始化函數 - 優化版本
+    window.initMyPostVue = function() {
+        if (typeof Vue === 'undefined') {
+            console.error('Vue.js 未載入');
+            return;
+        }
+
+        const { createApp } = Vue;
+        
+        // 使用伺服器預載的資料，避免初始 API 請求
+
+        window.myPostApp = createApp({
+            data() {
+                return {
+                    // ✅ 使用伺服器預載的資料
+                    myPosts: serverInitialData.myPosts || [],
+                    stats: serverInitialData.stats || { totalPosts: 0, totalLikes: 0, totalComments: 0, postsWithNewResponses: 0 },
+                    pagination: serverInitialData.pagination || { currentPage: 1, totalPages: 1, pageSize: 5, totalCount: 0 },
+                    filterOptions: serverInitialData.filterOptions || {
+                        filterType: '',
+                        sortOrder: 'CreatedDesc',
+                        searchKeyword: '',
+                        onlyWithNewResponses: false
+                    },
+                    // ✅ 有預載資料時不顯示載入狀態
+                    isLoading: false,
+                    isDeleting: false,
+                    postToDelete: null,
+                    // 編輯相關
+                    isSaving: false,
+                    editForm: {
+                        id: null,
+                        title: '',
+                        content: '',
+                        type: 'Review',
+                        price: null,
+                        tradeLocation: '',
+                        tradeNotes: '',
+                        hasComments: false,
+                        errors: []
+                    }
+                };
+            },
+            methods: {
+                // 載入個人貼文資料
+                async loadMyPostData(page = 1) {
+                    this.isLoading = true;
+                    try {
+                        const params = new URLSearchParams({
+                            page: page,
+                            pageSize: this.pagination.pageSize || 5,
+                            filterType: this.filterOptions.filterType || '',
+                            sortOrder: this.filterOptions.sortOrder || 'CreatedDesc',
+                            searchKeyword: this.filterOptions.searchKeyword || '',
+                            onlyWithNewResponses: this.filterOptions.onlyWithNewResponses || false
+                        });
+                        const response = await fetch(`/api/posts/MyPosts?${params.toString()}`);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        const result = await response.json();
+                        if (result.success) {
+                            this.myPosts = result.data.myPosts || [];
+                            this.stats = result.data.stats || this.stats;
+                            this.pagination = result.data.pagination || this.pagination;
+                        } else {
+                            throw new Error(result.message || '載入失敗');
+                        }
+                    } catch (error) {
+                        console.error('載入個人貼文失敗：', error);
+                        if (window.showErrorToast) window.showErrorToast('載入失敗：' + error.message);
+                        else alert('載入失敗，請稍後再試');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
+                // 應用篩選
+                applyFilter() {
+                    this.loadMyPostData(1);
+                },
+
+                // 查看貼文詳情
+                viewPost(postId) {
+                    window.open(`/Community?postId=${postId}`, '_blank');
+                },
+
+                // 編輯貼文：開啟 Modal 並委派給 edit-post-handler.js
+                async editPost(post) {
+                    if (!post.permissions.canEdit) {
+                        const reason = post.permissions.editRestrictionReason || '無法編輯此貼文';
+                        if (window.showErrorToast) window.showErrorToast(`無法編輯：${reason}`);
+                        else alert(`無法編輯：${reason}`);
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/posts/${post.id}`);
+                        if (!response.ok) throw new Error(`無法載入貼文資料: ${response.status}`);
+                        
+                        const result = await response.json();
+                        if (!result.success) throw new Error(result.message || '載入貼文資料失敗');
+                        
+                        const fullPost = result.data;
+
+                        // 更新 Vue 中的 editForm 物件，這是資料的唯一真實來源
+                        this.editForm = {
+                            id: fullPost.id,
+                            title: fullPost.title || '',
+                            content: fullPost.content || '',
+                            type: fullPost.type,
+                            price: fullPost.tradeInfo?.price || null,
+                            tradeLocation: fullPost.tradeInfo?.location || '',
+                            tradeNotes: fullPost.tradeInfo?.notes || '',
+                            imageUrls: fullPost.imageUrls ? fullPost.imageUrls.split(';').filter(url => url.trim() !== '') : [],
+                            hasComments: (fullPost.commentCount || 0) > 0,
+                            errors: []
+                        };
+                        
+                        this.clearEditFormErrors();
+
+                        await this.$nextTick();
+                        
+                        const modal = new bootstrap.Modal(document.getElementById('editPostModal'));
+                        modal.show();
+                        
+                        // 呼叫外部處理器來接管 Modal 的 DOM 操作
+                        if (window.initEditPostModal) {
+                            window.initEditPostModal();
+                        } else {
+                            console.error('edit-post-handler.js 或 initEditPostModal 函數未載入。');
+                        }
+                        
+                    } catch (error) {
+                        console.error('載入編輯資料失敗：', error);
+                        if (window.showErrorToast) window.showErrorToast('載入編輯資料時發生錯誤');
+                        else alert('載入編輯資料時發生錯誤');
+                    }
+                },
+
+                // 驗證編輯表單
+                validateEditForm() {
+                    const errors = [];
+                    if (!this.editForm.content.trim()) errors.push('內容不能為空');
+                    if (this.editForm.content.length > 5000) errors.push('內容最多 5000 個字元');
+                    if (this.editForm.title && this.editForm.title.length > 200) errors.push('標題最多 200 個字元');
+                    if (this.editForm.type == 2) {
+                        if (!this.editForm.tradeLocation.trim()) errors.push('交易地點為必填');
+                        if (this.editForm.tradeLocation.length > 100) errors.push('交易地點最多 100 個字元');
+                        if (this.editForm.tradeNotes && this.editForm.tradeNotes.length > 500) errors.push('交易備註最多 500 個字元');
+                        if (this.editForm.price !== null && (this.editForm.price < 0 || this.editForm.price > 999999)) errors.push('價格必須在 0-999999 之間');
+                    }
+                    this.showEditFormErrors(errors);
+                    return errors.length === 0;
+                },
+
+                // 儲存編輯
+                async savePostEdit() {
+                    this.updateEditFormFromDOM();
+                    if (!this.validateEditForm()) return;
+
+                    this.isSaving = true;
+                    if (typeof updateSaveButtonState === 'function') updateSaveButtonState(true);
+                    
+                    try {
+                        const updateData = {
+                            title: this.editForm.title,
+                            content: this.editForm.content,
+                            type: this.editForm.type,
+                            gameDetailId: null,
+                            price: this.editForm.type == 2 ? this.editForm.price : null,
+                            tradeLocation: this.editForm.type == 2 ? this.editForm.tradeLocation : null,
+                            tradeNotes: this.editForm.type == 2 ? this.editForm.tradeNotes : null,
+                            imageUrls: this.editForm.imageUrls && this.editForm.imageUrls.length > 0 ? this.editForm.imageUrls.join(';') : null
+                        };
+
+                        const response = await fetch(`/api/posts/${this.editForm.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updateData)
+                        });
+
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`API 請求失敗: ${response.status} ${errorText}`);
+                        }
+                        const result = await response.json();
+                        if (!result.success) throw new Error(result.message || '更新失敗');
+
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editPostModal'));
+                        modal.hide();
+                        await this.loadMyPostData(this.pagination.currentPage);
+                        if (window.showSuccessToast) window.showSuccessToast('貼文更新成功');
+                        else alert('貼文更新成功');
+
+                    } catch (error) {
+                        console.error('更新貼文失敗：', error);
+                        this.showEditFormErrors([error.message || '更新失敗，請稍後再試']);
+                    } finally {
+                        this.isSaving = false;
+                        if (typeof updateSaveButtonState === 'function') updateSaveButtonState(false);
+                    }
+                },
+                
+                // 手動從 DOM 更新編輯表單的值
+                updateEditFormFromDOM() {
+                    const form = document.getElementById('editPostForm');
+                    if (!form) return;
+                    this.editForm.title = form.querySelector('input[type="text"]')?.value || '';
+                    this.editForm.content = form.querySelector('textarea')?.value || '';
+                    this.editForm.type = parseInt(form.querySelector('select')?.value || 0);
+                    if (this.editForm.type == 2) {
+                        this.editForm.price = form.querySelector('input[type="number"]')?.value ? parseFloat(form.querySelector('input[type="number"]').value) : null;
+                        this.editForm.tradeLocation = form.querySelector('input[placeholder*="交易地點"]')?.value || '';
+                        this.editForm.tradeNotes = form.querySelector('textarea[placeholder*="交易相關"]')?.value || '';
+                    }
+                },
+                
+                // 切換交易欄位顯示
+                toggleTradeFields(postType) {
+                    const tradeFields = document.getElementById('tradeFields');
+                    if (tradeFields) tradeFields.style.display = (postType == 2) ? 'block' : 'none';
+                },
+                
+                // 顯示/清除編輯表單錯誤
+                showEditFormErrors(errors) {
+                    const errorDiv = document.getElementById('editFormErrors');
+                    const errorList = document.getElementById('editFormErrorList');
+                    if (errors && errors.length > 0) {
+                        errorList.innerHTML = errors.map(error => `<li>${error}</li>`).join('');
+                        errorDiv.style.display = 'block';
+                    } else {
+                        this.clearEditFormErrors();
+                    }
+                },
+                clearEditFormErrors() {
+                    const errorDiv = document.getElementById('editFormErrors');
+                    const errorList = document.getElementById('editFormErrorList');
+                    if (errorDiv) errorDiv.style.display = 'none';
+                    if (errorList) errorList.innerHTML = '';
+                },
+
+                // 刪除處理
+                handleDeleteClick(post) {
+                    if (!post.permissions.canDelete) {
+                        const reason = post.permissions.deleteRestrictionReason || '無法刪除此貼文';
+                        if (window.showErrorToast) window.showErrorToast(`無法刪除：${reason}`);
+                        else alert(`無法刪除：${reason}`);
+                        return;
+                    }
+                    this.confirmDeletePost(post);
+                },
+                confirmDeletePost(post) {
+                    this.postToDelete = post;
+                    if (typeof setDeletePostTitle === 'function') setDeletePostTitle(post.title);
+                    const modal = new bootstrap.Modal(document.getElementById('deletePostModal'));
+                    modal.show();
+                },
+                async deletePost() {
+                    if (!this.postToDelete) return;
+                    this.isDeleting = true;
+                    if (typeof updateDeleteButtonState === 'function') updateDeleteButtonState(true);
+                    try {
+                        const token = document.querySelector('[name="__RequestVerificationToken"]')?.value;
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (token) headers['RequestVerificationToken'] = token;
+
+                        const response = await fetch(`/api/posts/${this.postToDelete.id}`, { method: 'DELETE', headers: headers });
+                        if (!response.ok) throw new Error('刪除失敗');
+
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('deletePostModal'));
+                        modal.hide();
+                        this.loadMyPostData(this.pagination.currentPage);
+                        alert('貼文已刪除');
+                    } catch (error) {
+                        console.error('刪除貼文失敗：', error);
+                        alert('刪除失敗，請稍後再試');
+                    } finally {
+                        this.isDeleting = false;
+                        this.postToDelete = null;
+                        if (typeof updateDeleteButtonState === 'function') updateDeleteButtonState(false);
+                    }
+                },
+
+                // 導航與UI輔助方法
+                goToCreatePost() { window.open('/Community', '_blank'); },
+                goToPage(page) {
+                    if (page >= 1 && page <= this.pagination.totalPages) this.loadMyPostData(page);
+                },
+                getPageNumbers() {
+                    const pages = [];
+                    const current = this.pagination.currentPage, total = this.pagination.totalPages;
+                    let start = Math.max(1, current - 2), end = Math.min(total, start + 4);
+                    if (end - start < 4) start = Math.max(1, end - 4);
+                    for (let i = start; i <= end; i++) pages.push(i);
+                    return pages;
+                },
+                getPostTypeClass(type) {
+                    return { 0: 'bg-success', 1: 'bg-info', 2: 'bg-warning', 3: 'bg-purple' }[type] || 'bg-secondary';
+                },
+                getPostBorderClass(type) {
+                    return { 0: 'border-success', 1: 'border-info', 2: 'border-warning', 3: 'border-purple' }[type] || 'border-secondary';
+                },
+                getPostTypeText(type) {
+                    return { 0: '心得分享', 1: '詢問求助', 2: '二手交易', 3: '創作展示' }[type] || '未分類';
+                },
+                formatDate(dateString) {
+                    const date = new Date(dateString), now = new Date();
+                    const diffDays = Math.ceil(Math.abs(now - date) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 1) return '昨天';
+                    if (diffDays <= 7) return `${diffDays} 天前`;
+                    return date.toLocaleDateString('zh-TW');
+                }
+            },
+            mounted() {
+                // 隱藏載入提示
+                const loadingElement = document.getElementById('myPostLoading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+                
+                // 檢查是否有預載資料，避免不必要的 API 請求
+                if (this.myPosts !== null && Array.isArray(this.myPosts)) {
+                    // 使用預載資料，跳過初始 API 請求
+                } else {
+                    this.loadMyPostData();
+                }
+            }
+        });
+
+        try {
+            // 掛載 Vue 應用程式並保存實例供全域函數使用
+            const vueInstance = window.myPostApp.mount('#myPostPage');
+            window.myPostAppInstance = vueInstance;
+        } catch (error) {
+            console.error("MyPost Vue 掛載失敗:", error);
+        }
+    };
+</script>
+
+<style>
+/* 自定義樣式 */
+.border-purple {
+    border-color: #6f42c1 !important;
+}
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+.card {
+    transition: box-shadow 0.15s ease-in-out;
+}
+.card:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+.page-link {
+    cursor: pointer;
+}
+</style>

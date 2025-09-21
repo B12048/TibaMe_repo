@@ -1,0 +1,437 @@
+﻿<div id="manageApp">
+    <div class="container-fluid">
+        <div class="row d-flex flex-grow-1">
+            <!-- 側邊選單 -->
+            @Html.Partial("_AdminSidebar")
+
+            <!-- 主內容區 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                    <h2 class="m-0">貼文/留言管理</h2>
+
+                    <!-- 查詢 -->
+                    <div class="admin-header-search">
+                        <div class="input-group" style="width: 650px;">
+                            <input type="text" class="form-control" placeholder="搜尋檢舉原因或描述"
+                                   v-model="searchText" @@keyup.enter="searchReports">
+                            <button class="btn btn-outline-success" type="button" @@click="searchReports">Search</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 載入/錯誤/全空 -->
+                <div v-if="loading" class="alert alert-info mt-2">資料載入中…</div>
+                <div v-else-if="error" class="alert alert-danger mt-2">載入失敗：{{ error }}</div>
+                <div v-else-if="!loading && !error && unreviewedItems.length===0 && reviewedItems.length===0 && (!hasSearched || searchResults.length===0)"
+                     class="alert alert-warning mt-2">
+                    目前沒有任何檢舉資料。
+                </div>
+
+                <!-- 🔎 搜尋結果（只有搜尋後才顯示） -->
+                <section v-if="hasSearched" class="mt-4">
+                    <h4>搜尋結果 <span class="badge bg-secondary">{{ searchResults.length }}</span></h4>
+                    <div class="accordion mt-2" id="outerAccordionSearch" role="region" aria-label="搜尋結果">
+                        <template v-if="searchResults.length">
+                            <div class="accordion-item" v-for="item in searchResults" :key="item.id">
+                                <h2 class="accordion-header" :id="'headingSearch' + item.id">
+                                    <button class="accordion-button"
+                                            :class="{ collapsed: !isOpen('collapseSearch' + item.id) }"
+                                            type="button"
+                                            @@click="toggleCollapse('collapseSearch' + item.id, '#outerAccordionSearch')">
+                                        {{ item.account }}帳號：{{ item.title }}
+                                    </button>
+                                </h2>
+                                <div :id="'collapseSearch' + item.id"
+                                     class="accordion-collapse collapse"
+                                     :aria-labelledby="'headingSearch' + item.id">
+                                    <div class="accordion-body">
+                                        <div class="report-text">
+                                            <div class="mb-2">
+                                                <span class="badge" :class="item.resultClass">{{ item.result }}</span>
+                                            </div>
+                                            <p class="mb-1"><b>原因：</b>{{ item.reason }}</p>
+                                            <p v-if="item.remark" class="mb-2"><b>備註：</b><span class="text-prewrap">{{ item.remark }}</span></p>
+
+                                            <div class="mt-2">
+                                                <b>檢舉內容：</b>
+                                                <template v-if="item.reportedContent">
+                                                    <div v-if="item.reportedContentIsHtml">
+                                                        <div v-html="item._expanded ? item.reportedContent : item._truncatedHtml"></div>
+                                                        <button class="btn btn-link btn-sm px-0"
+                                                                v-if="item._canToggle"
+                                                                @@click="item._expanded = !item._expanded">
+                                                            {{ item._expanded ? '收合' : '展開全文' }}
+                                                        </button>
+                                                    </div>
+                                                    <div v-else>
+                                                        <pre class="mb-1" style="white-space: pre-wrap;">{{ item._expanded ? item.reportedContent : item._truncatedText }}</pre>
+                                                        <button class="btn btn-link btn-sm px-0"
+                                                                v-if="item._canToggle"
+                                                                @@click="item._expanded = !item._expanded">
+                                                            {{ item._expanded ? '收合' : '展開全文' }}
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                                <p v-else class="text-muted mb-0">（無可顯示內容）</p>
+                                            </div>
+
+                                            <small class="text-muted d-block mt-2">
+                                                被檢舉時間：{{ new Date(item.createdAt).toLocaleString() }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- 無資料（但已搜尋） -->
+                        <div class="accordion-item" v-else>
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" disabled>沒有符合的搜尋結果</button>
+                            </h2>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ⏳ 尚未審核 -->
+                <h4 class="mt-4">審核中 <span class="badge bg-warning text-dark">{{ unreviewedItems.length }}</span></h4>
+                <div class="accordion mt-2" id="outerAccordion" role="region" aria-label="審核中">
+                    <template v-if="unreviewedItems.length">
+                        <div class="accordion-item" v-for="item in unreviewedItems" :key="item.id">
+                            <h2 class="accordion-header" :id="'headingUnreviewed' + item.id">
+                                <button class="accordion-button"
+                                        :class="{ collapsed: !isOpen('collapseUnreviewed' + item.id) }"
+                                        type="button"
+                                        @@click="toggleCollapse('collapseUnreviewed' + item.id, '#outerAccordion')">
+                                    {{ item.title }}
+                                </button>
+                            </h2>
+                            <div :id="'collapseUnreviewed' + item.id"
+                                 class="accordion-collapse collapse"
+                                 :aria-labelledby="'headingUnreviewed' + item.id">
+                                <div class="accordion-body">
+                                    <div class="report-text">
+                                        <div class="mb-2">
+                                            <span class="badge" :class="item.resultClass">{{ item.result }}</span>
+                                        </div>
+                                        <p class="mb-1"><b>原因：</b>{{ item.reason }}</p>
+                                        <p v-if="item.remark" class="mb-2"><b>備註：</b><span class="text-prewrap">{{ item.remark }}</span></p>
+
+                                        <div class="mt-2">
+                                            <b>檢舉內容：</b>
+                                            <template v-if="item.reportedContent">
+                                                <div v-if="item.reportedContentIsHtml">
+                                                    <div v-html="item._expanded ? item.reportedContent : item._truncatedHtml"></div>
+                                                    <button class="btn btn-link btn-sm px-0"
+                                                            v-if="item._canToggle"
+                                                            @@click="item._expanded = !item._expanded">
+                                                        {{ item._expanded ? '收合' : '展開全文' }}
+                                                    </button>
+                                                </div>
+                                                <div v-else>
+                                                    <pre class="mb-1" style="white-space: pre-wrap;">{{ item._expanded ? item.reportedContent : item._truncatedText }}</pre>
+                                                    <button class="btn btn-link btn-sm px-0"
+                                                            v-if="item._canToggle"
+                                                            @@click="item._expanded = !item._expanded">
+                                                        {{ item._expanded ? '收合' : '展開全文' }}
+                                                    </button>
+                                                </div>
+                                            </template>
+                                            <p v-else class="text-muted mb-0">（無可顯示內容）</p>
+                                        </div>
+
+                                        <small class="text-muted d-block mt-2">
+                                            被檢舉時間：{{ new Date(item.createdAt).toLocaleString() }}
+                                        </small>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end mt-3">
+                                        <button class="btn btn-success me-2" :disabled="item._busy" @@click="approve(item)">
+                                            <span v-if="item._busy" class="spinner-border spinner-border-sm me-1"></span>核准
+                                        </button>
+                                        <button class="btn btn-danger" :disabled="item._busy" @@click="reject(item)">
+                                            <span v-if="item._busy" class="spinner-border spinner-border-sm me-1"></span>退回
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <div class="accordion-item" v-else>
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" disabled>目前沒有待審核的檢舉</button>
+                        </h2>
+                    </div>
+                </div>
+
+                <!-- ✅ 已審核 -->
+                <h4 class="mt-4">已審核 <span class="badge bg-success">{{ reviewedItems.length }}</span></h4>
+                <div class="accordion mt-2" id="outerAccordion2" role="region" aria-label="已審核">
+                    <template v-if="reviewedItems.length">
+                        <div class="accordion-item" v-for="item in reviewedItems" :key="item.id">
+                            <h2 class="accordion-header" :id="'headingReviewed' + item.id">
+                                <button class="accordion-button"
+                                        :class="{ collapsed: !isOpen('collapseReviewed' + item.id) }"
+                                        type="button"
+                                        @@click="toggleCollapse('collapseReviewed' + item.id, '#outerAccordion2')">
+                                    {{ item.account }}帳號：{{ item.title }}
+                                </button>
+                            </h2>
+                            <div :id="'collapseReviewed' + item.id"
+                                 class="accordion-collapse collapse"
+                                 :aria-labelledby="'headingReviewed' + item.id">
+                                <div class="accordion-body">
+                                    <div class="report-text">
+                                        <div class="mb-2">
+                                            <span class="badge" :class="item.resultClass">{{ item.result }}</span>
+                                        </div>
+                                        <p class="mb-1"><b>原因：</b>{{ item.reason }}</p>
+                                        <p v-if="item.remark" class="mb-2"><b>備註：</b><span class="text-prewrap">{{ item.remark }}</span></p>
+
+                                        <div class="mt-2">
+                                            <b>檢舉內容：</b>
+                                            <template v-if="item.reportedContent">
+                                                <div v-if="item.reportedContentIsHtml">
+                                                    <div v-html="item._expanded ? item.reportedContent : item._truncatedHtml"></div>
+                                                    <button class="btn btn-link btn-sm px-0"
+                                                            v-if="item._canToggle"
+                                                            @@click="item._expanded = !item._expanded">
+                                                        {{ item._expanded ? '收合' : '展開全文' }}
+                                                    </button>
+                                                </div>
+                                                <div v-else>
+                                                    <pre class="mb-1" style="white-space: pre-wrap;">{{ item._expanded ? item.reportedContent : item._truncatedText }}</pre>
+                                                    <button class="btn btn-link btn-sm px-0"
+                                                            v-if="item._canToggle"
+                                                            @@click="item._expanded = !item._expanded">
+                                                        {{ item._expanded ? '收合' : '展開全文' }}
+                                                    </button>
+                                                </div>
+                                            </template>
+                                            <p v-else class="text-muted mb-0">（無可顯示內容）</p>
+                                        </div>
+
+                                        <small class="text-muted d-block mt-2">
+                                            被檢舉時間：{{ new Date(item.createdAt).toLocaleString() }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <div class="accordion-item" v-else>
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" disabled>目前沒有已審核的檢舉</button>
+                        </h2>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<!-- Vue 3 -->
+<script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
+
+<script>
+    const { createApp } = Vue;
+
+    function getToken() {
+      const m = document.querySelector('meta[name="__RequestVerificationToken"]');
+      if (m) return m.content;
+      const i = document.querySelector('input[name="__RequestVerificationToken"]');
+      return i ? i.value : '';
+    }
+
+    async function fetchJson(url, init) {
+      const defaults = { headers: {} };
+      // 自動帶上 CSRF 與 JSON header（POST/PUT/PATCH/DELETE）
+      const method = (init?.method || 'GET').toUpperCase();
+      if (['POST','PUT','PATCH','DELETE'].includes(method)) {
+        defaults.headers['Content-Type'] = 'application/json';
+        const token = getToken();
+        if (token) defaults.headers['RequestVerificationToken'] = token;
+      }
+      const res = await fetch(url, {
+        ...init,
+        headers: { ...defaults.headers, ...(init?.headers || {}) }
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`[${res.status}] ${res.statusText} ${text}`);
+      }
+      try { return await res.json(); }
+      catch { throw new Error('Response is not valid JSON'); }
+    }
+
+    function pick(obj, ...cands) { for (const k of cands) if (obj && Object.hasOwn(obj, k)) return obj[k]; }
+
+    createApp({
+      data() {
+        return {
+          loading: true,
+          error: "",
+          unreviewedItems: [],
+          reviewedItems: [],
+          searchResults: [],
+          searchText: "",
+          hasSearched: false,
+          openMap: {}
+        };
+      },
+
+      methods: {
+        // —— 手風琴控制 —— //
+        isOpen(id) { return !!this.openMap[id]; },
+        toggleCollapse(id, parentSelector) {
+          const el = document.getElementById(id);
+          if (!el || !window.bootstrap) return;
+          const inst = bootstrap.Collapse.getOrCreateInstance(el, { toggle: false, parent: parentSelector });
+          if (!el.dataset.bsBound) {
+            el.addEventListener('shown.bs.collapse', () => { this.openMap[id] = true; });
+            el.addEventListener('hidden.bs.collapse', () => { this.openMap[id] = false; });
+            el.dataset.bsBound = '1';
+          }
+          this.isOpen(id) ? inst.hide() : inst.show();
+        },
+
+        // —— 資料映射 —— //
+        mapReport(r) {
+          const id = pick(r,"id","Id");
+          const reportedType = pick(r,"reportedType","ReportedType");
+          const reportedId = pick(r,"reportedId","ReportedId");
+          const reason = pick(r,"reason","Reason") || "";
+          const remark = pick(r,"description","Description") || "";
+          const reporterId = pick(r,"reporterId","ReporterId");
+          const status = pick(r,"status","Status");
+          const createdAt = pick(r,"createdAt","CreatedAt");
+          const reportedTitle = pick(r,"reportedTitle","ReportedTitle");
+          const reportedContent = pick(r,"reportedContent","ReportedContent") || "";
+          const reportedContentIsHtml = !!pick(r,"reportedContentIsHtml","ReportedContentIsHtml");
+
+          const LIMIT = 600;
+          let _truncatedText = reportedContent;
+          let _truncatedHtml = reportedContent;
+          let _canToggle = false;
+
+          if (!reportedContentIsHtml) {
+            if (reportedContent.length > LIMIT) {
+              _truncatedText = reportedContent.slice(0, LIMIT) + "…";
+              _canToggle = true;
+            }
+          } else {
+            const textLen = reportedContent.replace(/<[^>]*>/g, "").length;
+            if (textLen > LIMIT) { _truncatedHtml = reportedContent; _canToggle = true; }
+          }
+
+          const resultText = status === "Resolved" ? "核准" : (status === "Rejected" ? "退回" : "待審核");
+          const resultClass = status === "Resolved" ? "bg-success" : (status === "Rejected" ? "bg-danger" : "bg-secondary");
+
+          return {
+            id,
+            title: `${reportedType} #${reportedId}`,
+            reason, remark,
+            account: reporterId,
+            result: resultText,
+            resultClass,
+            createdAt,
+            reportedTitle,
+            reportedContent,
+            reportedContentIsHtml,
+            _expanded: false,
+            _canToggle,
+            _truncatedText,
+            _truncatedHtml,
+            _busy: false
+          };
+        },
+
+        // —— API —— //
+        async loadUnreviewed() {
+          const data = await fetchJson("/api/reports/unreviewed");
+          this.unreviewedItems = Array.isArray(data) ? data.map(this.mapReport) : [];
+        },
+        async loadReviewed() {
+          const data = await fetchJson("/api/reports/reviewed");
+          this.reviewedItems = Array.isArray(data) ? data.map(this.mapReport) : [];
+        },
+        async searchReports() {
+          const q = (this.searchText ?? "").trim();
+          if (!q) { this.searchResults = []; this.hasSearched = false; return; }
+          this.hasSearched = true;
+          try {
+            const data = await fetchJson(`/api/reports/search?searchText=${encodeURIComponent(q)}`);
+            this.searchResults = Array.isArray(data) ? data.map(this.mapReport) : [];
+          } catch (err) {
+            console.error(err);
+            this.searchResults = [];
+          }
+        },
+
+        // —— 審核動作（改呼叫新的後端 API） —— //
+        async approve(item) {
+          if (item._busy) return;
+          item._busy = true;
+          try {
+            const notes = "核准"; // 也可改成 prompt 讓管理員填寫
+            const res = await fetchJson(`/api/reports/moderation/${item.id}/approve`, {
+              method: "POST",
+              body: JSON.stringify({ notes })
+            });
+            if (res && res.success !== false) {
+              // 移到已審核清單
+              const updated = { ...item, result: "核准", resultClass: "bg-success", _busy: false };
+              this.reviewedItems.push(updated);
+              this.unreviewedItems = this.unreviewedItems.filter(i => i.id !== item.id);
+            }
+          } catch (err) {
+            console.error(err);
+            alert("核准失敗：" + (err?.message || err));
+          } finally {
+            item._busy = false;
+          }
+        },
+
+        async reject(item) {
+          if (item._busy) return;
+          item._busy = true;
+          try {
+            const notes = "退回"; // 也可改成 prompt 讓管理員填寫
+            const res = await fetchJson(`/api/reports/moderation/${item.id}/reject`, {
+              method: "POST",
+              body: JSON.stringify({ notes })
+            });
+            if (res && res.success !== false) {
+              const updated = { ...item, result: "退回", resultClass: "bg-danger", _busy: false };
+              this.reviewedItems.push(updated);
+              this.unreviewedItems = this.unreviewedItems.filter(i => i.id !== item.id);
+            }
+          } catch (err) {
+            console.error(err);
+            alert("退回失敗：" + (err?.message || err));
+          } finally {
+            item._busy = false;
+          }
+        }
+      },
+
+      async mounted() {
+        try {
+          await Promise.all([this.loadUnreviewed(), this.loadReviewed()]);
+        } catch (err) {
+          console.error(err);
+          this.error = err?.message || "載入失敗";
+        } finally {
+          this.loading = false;
+        }
+      }
+    }).mount('#manageApp');
+</script>
+
+<style>
+    .report-text {
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+</style>

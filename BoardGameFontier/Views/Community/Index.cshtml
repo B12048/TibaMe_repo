@@ -1,0 +1,746 @@
+@model BoardGameFontier.Models.ViewModels.CommunityViewModel
+@using Microsoft.AspNetCore.Http.Extensions
+@{
+    ViewData["Title"] = "社群討論";
+}
+
+@*
+社群頁面架構筆記：
+
+MVC 架構展示：
+- Model: CommunityViewModel 包含頁面所需的所有資料
+- View: 這個 .cshtml 檔案負責畫面呈現
+- Controller: CommunityController 處理使用者請求
+
+前後端整合技術：
+- Razor 語法：@Model.xxx 在伺服器端注入資料
+- Vue.js 3：用於動態互動和 AJAX 操作
+- Bootstrap 5：響應式設計框架
+- 前端模組化：JavaScript 分成多個模組檔案
+
+安全性考量：
+- @Html.AntiForgeryToken() 防止 CSRF 攻擊
+- 隱藏欄位傳遞使用者資訊給前端 JavaScript
+*@
+
+@section Styles {
+    @* 筆記：CSS 載入策略 *@
+    @* 
+    字體載入優化：
+    - preconnect 提前建立連線，減少載入時間
+    - Google Fonts 提供思源黑體，支援繁體中文顯示
+    - display=swap 確保文字優先顯示，字體載入完成後替換
+    
+    CSS 版本控制：
+    - ?v=@DateTime.Now.Ticks 強制瀏覽器重新載入 CSS
+    - 開發時避免快取問題，生產環境應該用版本號
+    *@
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/community-optimized.css?v=@DateTime.Now.Ticks" />
+}
+
+@* 筆記：前後端資料傳遞 *@
+@* 
+安全的資料傳遞方式：
+- 隱藏欄位讓後端資料能被前端 JavaScript 讀取
+- AntiForgeryToken 防止跨站請求偽造攻擊
+- data-* 屬性符合 HTML5 標準，用於傳遞自訂資料
+
+響應式網格系統：
+- Bootstrap 12 欄網格：col-3 (側邊欄) + col-9 (主內容)
+- 適合桌面版顯示，手機版需要調整欄寬比例
+*@
+<input type="hidden" id="currentUserId" value="@Model.CurrentUser.UserId" />
+<input type="hidden" id="isAuthenticated" value="@Model.CurrentUser.IsAuthenticated.ToString()" />
+@Html.AntiForgeryToken()
+
+<div class="community-container" @(ViewData["AutoLoadPostId"] != null ? $"data-auto-load-post-id=\"{ViewData["AutoLoadPostId"]}\"" : "")>
+    <div class="row">
+        @* 左側邊欄：導航和使用者資訊 *@
+        <div class="col-3">
+            <partial name="~/Views/Shared/Partials/_CommunityLeftSidebar.cshtml" />
+        </div>
+
+        @* 主要內容區域：貼文列表和詳情頁 *@
+        <div class="col-9">
+            <div class="main-content" id="mainContentArea">
+            
+            @* 筆記：Vue.js 3 單頁應用架構 *@
+            @* 
+            SPA 架構設計：
+            - 同一個 div 內有「列表視圖」和「詳情視圖」
+            - 用 v-show 控制顯示/隱藏，避免重新載入頁面
+            - Options API 語法，符合課程學習目標
+            
+            🚀 前端路由模擬：
+            - isDetailView 控制視圖切換
+            - 類似 Vue Router 但更簡單，適合學習
+            *@
+            <div id="community-posts-app">
+
+                @* ============================================= *@
+                @* 1. 列表視圖：顯示所有貼文的卡片列表 (預設畫面) *@
+                @* ============================================= *@
+                <div v-show="!isDetailView">
+                    @* 筆記：頂部功能列設計 *@
+                    <div class="top-bar mb-4">
+                        @* 分類篩選按鈕群組 *@
+                        <div class="category-tabs">
+                            @* Vue.js 列表渲染：v-for + 動態 CSS class *@
+                            <button v-for="filter in filterButtons" 
+                                    :key="filter.type"
+                                    :class="['category-tab btn', { active: filter.active, 'btn-primary': filter.active, 'btn-outline-primary': !filter.active }]"
+                                    v-on:click="filterPosts(filter.type)">
+                                 {{ filter.text }}
+                            </button>
+                        </div>
+                        @* 搜尋輸入框區域 *@
+                        <div class="search-container flex-grow-1">
+                            <div class="input-group">
+                                @* 雙向資料繫結：v-model + 即時搜尋 *@
+                                <input type="text" 
+                                       class="form-control search-input" 
+                                       v-model="searchKeyword"
+                                       v-on:input="searchPosts"
+                                       placeholder="搜尋貼文內容...">
+                                @* 條件渲染：v-if 控制清除按鈕顯示 *@
+                                <button class="btn btn-outline-secondary" 
+                                        v-if="searchKeyword" 
+                                        v-on:click="clearSearch"
+                                        type="button">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
+                        @* 操作按鈕區域：發布貼文或登入提示 *@
+                        <div class="action-area">
+                            @* 筆記：條件式 UI 顯示 *@
+                            @* Razor 語法：@if 根據登入狀態顯示不同按鈕 *@
+                            @if (Model.CurrentUser.IsAuthenticated)
+                            {
+                                @* 已登入：顯示發布貼文按鈕 (Bootstrap Modal) *@
+                                <button class="btn btn-success create-post-btn" id="createPostBtn" type="button" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                                    <i class="bi bi-plus-circle"></i> 發布貼文
+                                </button>
+                            }
+                            else
+                            {
+                                @* 未登入：顯示登入連結，並記住目前頁面 (returnUrl) *@
+                                <a href="/Login/IndexLogin?returnUrl=@Uri.EscapeDataString(Context.Request.GetDisplayUrl())" class="btn btn-outline-success create-post-btn">
+                                    <i class="bi bi-box-arrow-in-right"></i> 登入發文
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                    @* 筆記：Bootstrap 輪播元件 *@
+                    <div class="carousel-area mb-4">
+                        @* 條件渲染：有輪播資料時顯示輪播，沒有時顯示預設橫幅 *@
+                        @if (Model.PageSettings.CarouselItems?.Any() == true)
+                        {
+                            @* Bootstrap 5 輪播元件：自動播放，5秒間隔 *@
+                            <div id="communityCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                                <div class="carousel-indicators">
+                                    @for (int i = 0; i < Model.PageSettings.CarouselItems.Count; i++)
+                                    {
+                                        <button type="button" 
+                                                data-bs-target="#communityCarousel" 
+                                                data-bs-slide-to="@i" 
+                                                class="@(i == 0 ? "active" : "")" 
+                                                aria-current="@(i == 0 ? "true" : "false")" 
+                                                aria-label="Slide @(i + 1)">
+                                        </button>
+                                    }
+                                </div>
+                                <div class="carousel-inner rounded-3 shadow-sm">
+                                    @for (int i = 0; i < Model.PageSettings.CarouselItems.Count; i++)
+                                    {
+                                        var item = Model.PageSettings.CarouselItems[i];
+                                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                                            @if (item.OpenInNewTab)
+                                            {
+                                                <a href="@item.LinkUrl" target="_blank" rel="noopener noreferrer" class="carousel-link">
+                                                    <div class="carousel-game-banner" style="background-image: url('@Url.Content(item.ImageUrl)')">
+                                                        <div class="text-center">
+                                                            <h3 class="fw-bold">@item.Title</h3>
+                                                            <p class="mb-0">@item.Description</p>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a href="@item.LinkUrl" class="carousel-link">
+                                                    <div class="carousel-game-banner" style="background-image: url('@Url.Content(item.ImageUrl)')">
+                                                        <div class="text-center">
+                                                            <h3 class="fw-bold">@item.Title</h3>
+                                                            <p class="mb-0">@item.Description</p>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#communityCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#communityCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            @* 沒有輪播內容時的預設橫幅 *@
+                            <div class="carousel-game-banner bg-primary text-white p-4 rounded">
+                                <div class="text-center">
+                                    <h4 class="fw-bold">歡迎來到桌遊前線社群</h4>
+                                    <p class="mb-0">分享心得、尋找玩伴、交易桌遊</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    @* 學習筆記：貼文列表容器 - Vue.js 動態內容 *@
+                    <div id="posts-list-container">
+                        @* Vue.js 條件渲染：根據狀態顯示不同內容 *@
+                        
+                        @* 載入中狀態：顯示轉圈動畫 *@
+                        <div v-if="loading" class="loading-indicator text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">載入中...</span>
+                            </div>
+                            <p class="mt-2 text-muted">正在載入社群貼文...</p>
+                        </div>
+                        
+                        @* 錯誤狀態：顯示錯誤訊息和重試按鈕 *@
+                        <div v-if="error" class="error-message alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                            <button class="btn btn-outline-danger btn-sm ms-2" v-on:click="refreshPosts">
+                                <i class="bi bi-arrow-clockwise"></i> 重新載入
+                            </button>
+                        </div>
+                        
+                        @* 空資料狀態：鼓勵使用者發布第一篇貼文 *@
+                        <div v-if="!loading && !error && !hasPosts" class="no-posts text-center py-5">
+                            <i class="bi bi-chat-text text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">目前沒有貼文</h5>
+                            <p class="text-muted">成為第一個發布貼文的人吧！</p>
+                        </div>
+                        @* 有貼文時：顯示響應式卡片網格 (載入中時隱藏舊內容) *@
+                        <div v-if="hasPosts && !loading" class="posts-container row g-4">
+                            @* Vue.js + Bootstrap 響應式網格：
+                                - v-for 迴圈渲染每篇貼文
+                                - col-lg-4: 大螢幕 3 欄
+                                - col-md-6: 中螢幕 2 欄  
+                                - col-sm-12: 小螢幕 1 欄 *@
+                            <div v-for="post in posts" :key="post.id" class="col-lg-4 col-md-6 col-sm-12">
+                                <div class="post-card h-100 shadow-sm" v-on:click="viewPostDetail(post.id)" style="cursor: pointer;">
+                                    @* 貼文類型標籤：動態顯示圖示和樣式 *@
+                                    <div :class="['post-category-tag', getPostTypeInfo(post.type).class]">                        
+                                        <span class="category-text">{{ getPostTypeInfo(post.type).text }}</span>
+                                    </div>
+                                    <div class="card-body d-flex flex-column flex-grow-1">
+                                        <div class="post-header d-flex align-items-center mb-1">
+                                            <!-- 作者頭貼 - 可點擊導向個人資料，阻止事件冒泡 -->
+                                            <div class="post-avatar me-2" 
+                                                 @@click.stop="openUserProfile(post.author.id)" 
+                                                 :title="'查看 ' + post.author.displayName + ' 的個人資料'"
+                                                 style="cursor: pointer;">
+                                                <img :src="getAvatarUrl(post.author.profilePictureUrl)" 
+                                                     width="40" height="40" 
+                                                     :alt="post.author.displayName + '的頭像'" 
+                                                     class="rounded-circle"
+                                                     onerror="this.src='/img/noPortrait.png'">
+                                            </div>
+                                            <div class="post-user-info">
+                                                <!-- 作者名稱 - 可點擊導向個人資料，阻止事件冒泡 -->
+                                                <div class="post-username fw-medium author-link" 
+                                                     @@click.stop="openUserProfile(post.author.id)"
+                                                     :title="'查看 ' + post.author.displayName + ' 的個人資料'"
+                                                     style="cursor: pointer;">
+                                                    {{ post.author.displayName }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- 標題與縮圖區域 -->
+                                        <div class="post-title-section d-flex align-items-start justify-content-between mb-2">
+                                            <h5 class="post-title card-title mb-0 flex-grow-1 me-2">{{ post.title || '無標題' }}</h5>
+                                            <!-- 貼文第一張圖片縮圖 -->
+                                            <div v-if="hasPostImages(post.imageUrls)" 
+                                                 class="post-thumbnail-container"
+                                                 v-on:click="openPostImagePreview(post, $event)"
+                                                 :title="'點擊預覽圖片 (' + parsePostImages(post.imageUrls).length + '張)'">
+                                                <img :src="getPostThumbnail(post.imageUrls)" 
+                                                     class="post-thumbnail"
+                                                     :alt="'貼文圖片預覽'"
+                                                     onerror="this.style.display='none'">
+                                                <div v-if="parsePostImages(post.imageUrls).length > 1" 
+                                                     class="image-count-badge">
+                                                    {{ parsePostImages(post.imageUrls).length }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="post-preview card-text text-muted flex-grow-1">{{ truncateText(post.content, 120) }}</p>
+                                        <div v-if="post.tradeInfo" class="trade-info-preview alert alert-info py-2 mb-3">
+                                            <small>
+                                                <i class="bi bi-currency-dollar"></i>
+                                                <span class="fw-medium">
+                                                    {{ post.tradeInfo.price > 0 ? post.tradeInfo.currency + post.tradeInfo.price : '價格面議' }}
+                                                </span>
+                                                <span v-if="post.tradeInfo.location" class="ms-2">
+                                                    <i class="bi bi-geo-alt"></i> {{ post.tradeInfo.location }}
+                                                </span>
+                                            </small>
+                                        </div>
+                                        <!-- 貼文統計 (無文字版本) -->
+                                        <div class="post-footer">
+                                            <div class="post-actions">
+                                                <!-- 按讚按鈕 -->
+                                                <button v-on:click.stop="toggleLike(post.id)" :class="['post-action', 'like-btn', { liked: post.isLikedByCurrentUser }]">
+                                                    <i class="post-action-icon" :class="post.isLikedByCurrentUser ? 'bi-heart-fill' : 'bi-heart'"></i>
+                                                    <span class="post-action-count">{{ post.likeCount || 0 }}</span>
+                                                </button>
+                                                <!-- 留言按鈕 -->
+                                                <button class="post-action comment-btn" title="留言">
+                                                    <i class="post-action-icon bi bi-chat-dots"></i>
+                                                    <span class="post-action-count">{{ post.commentCount || 0 }}</span>
+                                                </button>
+                                            </div>
+                                            <!-- 發文時間 -->
+                                            <div class="post-time text-muted small">{{ formatTimeAgo(post.createdAt) }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @* 分頁控制項：總是存在以避免選擇器錯誤，載入中時半透明 *@
+                        <div class="pagination-container mt-4" :class="{ 'opacity-50': loading }">
+                            <div id="posts-pagination"></div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ============================================= *@
+                @* 2. 詳情視圖：顯示單篇貼文的完整內容 (點選後顯示) *@
+                @* ============================================= *@
+                <div v-show="isDetailView">
+                    @* 詳情載入中狀態 *@
+                    <div v-if="detailLoading" class="loading-indicator text-center py-5">
+                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="visually-hidden">載入中...</span>
+                        </div>
+                        <p class="mt-3 text-muted">正在載入貼文詳情...</p>
+                    </div>
+                    @* 💡 v-html 動態注入 HTML：
+                        - detailHtml 來自 AJAX 回應
+                        - 讓 ASP.NET Core 渲染的 Partial View 可以嵌入 Vue.js 中 *@
+                    <div v-show="!detailLoading" v-html="detailHtml" id="post-detail-container"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@* 筆記：Bootstrap 5 模態框 (Modal) *@
+@* 
+模態框設計原則：
+- 只有登入使用者才能看到發布貼文功能
+- modal-lg 提供較大的編輯空間
+- 表單驗證結合後端 ModelState 和前端 JavaScript
+*@
+@if (Model.CurrentUser.IsAuthenticated)
+{
+    <div id="createPostModal" class="modal fade" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="createPostModalLabel">
+                        <i class="bi bi-megaphone"></i> 發表新貼文到論壇
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @* 筆記：動態表單設計 *@
+                    <form id="createPostForm">
+                        @* 貼文類型選擇：影響後續欄位顯示 *@
+                        <div class="mb-3">
+                            <label for="postType" class="form-label">
+                                <i class="bi bi-tags"></i> 貼文類型
+                            </label>
+                            @* 選項值對應 PostType enum：0=Review, 1=Question, 2=Trade, 3=Creation *@
+                            <select id="postType" name="type" class="form-select" required>
+                                <option value="0">心得分享 - 分享遊戲體驗、評測、開箱</option>
+                                <option value="1">詢問求助 - 規則問題、推薦請求</option>
+                                <option value="2">二手交易 - 桌遊買賣、交換</option>
+                                <option value="3">創作展示 - 自製配件、改良規則、藝術創作</option>
+                            </select>
+                        </div>
+
+                        <!-- 貼文標題 -->
+                        <div class="mb-3">
+                            <label for="postTitle" class="form-label">
+                                <i class="bi bi-card-text"></i> 貼文標題
+                                <small class="text-muted">（可選，留空將自動產生）</small>
+                            </label>
+                            <input type="text" id="postTitle" name="title" class="form-control"
+                                   placeholder="為你的貼文下個吸引人的標題..." maxlength="200">
+                        </div>
+
+                        <!-- 相關桌遊 -->
+                        <div class="mb-3">
+                            <label for="gameSelect" class="form-label">
+                                <i class="bi bi-dice-6"></i> 相關桌遊
+                            </label>
+                            <select id="gameSelect" name="gameId" class="form-select">
+                                <option value="">選擇桌遊（可選）</option>
+                                @foreach (var game in Model.AllGames)
+                                {
+                                    <option value="@game.Id">@game.DisplayName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- 貼文內容 -->
+                        <div class="mb-3">
+                            <label for="postContent" class="form-label">
+                                <i class="bi bi-pencil-square"></i> 貼文內容
+                            </label>
+                            <textarea id="postContent" name="content" class="form-control" rows="5"
+                                  placeholder="分享你的想法、經驗或問題..." required maxlength="5000"></textarea>
+                            <div class="form-text">最多 5000 字</div>
+                        </div>
+
+                        <!-- 圖片上傳區域 -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-image me-2"></i>貼文圖片
+                                <small class="text-muted">(最多5張，每張限制2MB)</small>
+                            </label>
+                            
+                            <!-- 圖片預覽區域 -->
+                            <div id="createImagePreview" class="mb-3" style="display: none;">
+                                <div class="row g-2" id="previewContainer">
+                                    <!-- 圖片預覽將在這裡動態生成 -->
+                                </div>
+                            </div>
+                            
+                            <!-- 上傳按鈕 -->
+                            <div class="d-flex align-items-center">
+                                <label for="createImageInput" class="btn btn-outline-primary d-flex align-items-center" style="cursor: pointer;">
+                                    <i class="bi bi-cloud-upload me-2"></i>選擇圖片
+                                </label>
+                                <small class="text-muted ms-3">支援 JPG、PNG、GIF、WEBP 格式</small>
+                            </div>
+                            
+                            <!-- 隱藏的檔案輸入框 -->
+                            <input type="file" 
+                                   id="createImageInput" 
+                                   accept="image/*" 
+                                   multiple 
+                                   style="display: none;"
+                                   onchange="handleCreatePostImageSelection(this)">
+                            
+                            <!-- 隱藏欄位用於傳送圖片URLs -->
+                            <input type="hidden" id="postImageUrls" name="imageUrls" value="">
+                            <!-- Vue.js 可以讀取的隱藏欄位 -->
+                            <input type="hidden" id="postImageUrlsForVue" name="imageUrlsForVue" value="">
+                        </div>
+
+                        <!-- 標籤 -->
+                        <div class="mb-3">
+                            <label for="postTags" class="form-label">
+                                <i class="bi bi-hash"></i> 標籤
+                                <small class="text-muted">（可選，用逗號分隔）</small>
+                            </label>
+                            <input type="text" id="postTags" name="tags" class="form-control"
+                                   placeholder="例如：新手心得,策略分享,開箱">
+                            <div class="form-text">幫助其他玩家找到你的貼文</div>
+                        </div>
+
+                        <!-- 交易相關欄位 -->
+                        <div id="tradeFields" style="display: none;">
+                            <hr>
+                            <h6 class="text-primary">
+                                <i class="bi bi-cash-coin"></i> 交易資訊
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="price" class="form-label">價格 (NT$)</label>
+                                    <input type="number" id="price" name="price" class="form-control"
+                                           min="0" step="1" placeholder="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="tradeLocation" class="form-label">交易地點</label>
+                                    <input type="text" id="tradeLocation" name="tradeLocation"
+                                           class="form-control" placeholder="例如：台北捷運沿線">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tradeNotes" class="form-label">交易備註</label>
+                                <textarea id="tradeNotes" name="tradeNotes" class="form-control" rows="3"
+                                      placeholder="物品狀況、交易方式等說明..."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> 取消
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="handleCreatePost()">
+                        <i class="bi bi-send"></i> 發表貼文
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* 圖片預覽模態框 *@
+<div class="modal fade" id="communityImagePreviewModal" tabindex="-1" aria-labelledby="communityImagePreviewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 bg-transparent">
+                <h5 class="modal-title text-white" id="communityImagePreviewLabel">圖片預覽</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-1">
+                <img id="communityPreviewImage" src="" alt="預覽圖片" class="img-fluid rounded shadow">
+                <!-- 圖片導航 -->
+                <div id="communityImageNavigation" class="mt-3" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-light btn-sm" onclick="previousCommunityImage()">
+                            <i class="bi bi-chevron-left"></i> 上一張
+                        </button>
+                        <span id="communityImageCounter" class="text-white"></span>
+                        <button type="button" class="btn btn-outline-light btn-sm" onclick="nextCommunityImage()">
+                            下一張 <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* 筆記：模組化 JavaScript 架構 *@
+    @* 
+    前端技術棧：
+    - Vue.js 3 CDN：不使用 Node.js 建置工具，符合課程要求
+    - Options API：物件導向風格，ASP.NET Core 開發者易上手
+    - 模組化設計：各功能分離，便於維護和測試
+    
+    載入順序重要性：
+    1. Vue.js 核心庫先載入
+    2. 功能模組按依賴關係載入
+    3. 初始化模組最後載入，避免依賴錯誤
+    *@
+    
+    @* Vue.js 3 核心庫 - 生產版本 *@
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    
+    @* 社群核心功能模組 *@
+    <script src="~/js/modules/PaginationManager.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/modules/PostManager.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/modules/CommunityPostsApp.js?v=@DateTime.Now.Ticks"></script>
+    
+    @* 頁面初始化協調器 *@
+    <script src="~/js/modules/CommunityInitializer.js?v=@DateTime.Now.Ticks"></script>
+    
+    @* 輔助功能模組 *@
+    <script src="~/js/modules/UIManager.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/modules/CommentManager.js?v=@DateTime.Now.Ticks"></script>
+    <script src="~/js/modules/FollowManager.js?v=@DateTime.Now.Ticks"></script>
+    
+    @* 全域應用程式協調器 *@
+    <script src="~/js/AppCoordinator.js?v=@DateTime.Now.Ticks"></script>
+    
+    @* 圖片預覽全域函數 *@
+    <script>
+        let currentCommunityImages = [];
+        let currentCommunityIndex = 0;
+
+        function previousCommunityImage() {
+            if (currentCommunityIndex > 0) {
+                currentCommunityIndex--;
+                document.getElementById('communityPreviewImage').src = currentCommunityImages[currentCommunityIndex];
+                updateCommunityImageCounter();
+            }
+        }
+
+        function nextCommunityImage() {
+            if (currentCommunityIndex < currentCommunityImages.length - 1) {
+                currentCommunityIndex++;
+                document.getElementById('communityPreviewImage').src = currentCommunityImages[currentCommunityIndex];
+                updateCommunityImageCounter();
+            }
+        }
+
+        function updateCommunityImageCounter() {
+            document.getElementById('communityImageCounter').textContent = `${currentCommunityIndex + 1} / ${currentCommunityImages.length}`;
+        }
+
+        // 更新 Vue 應用程式的圖片預覽方法
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.vueApp && window.vueApp.openImagePreview) {
+                const originalMethod = window.vueApp.openImagePreview;
+                window.vueApp.openImagePreview = function(images, startIndex) {
+                    currentCommunityImages = images;
+                    currentCommunityIndex = startIndex;
+                    originalMethod.call(this, images, startIndex);
+                };
+            }
+        });
+
+        // 新增貼文圖片上傳功能
+        let createPostImages = [];
+
+        function handleCreatePostImageSelection(input) {
+            const files = Array.from(input.files);
+            
+            // 檢查總圖片數量
+            if (createPostImages.length + files.length > 5) {
+                alert('最多只能上傳5張圖片');
+                input.value = ''; // 清空選擇
+                return;
+            }
+            
+            // 檢查每個檔案大小
+            for (let file of files) {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert(`檔案 ${file.name} 大小超過2MB限制`);
+                    input.value = '';
+                    return;
+                }
+            }
+            
+            uploadCreatePostImages(files);
+            input.value = ''; // 清空選擇
+        }
+
+        async function uploadCreatePostImages(files) {
+            try {
+                const formData = new FormData();
+                files.forEach(file => {
+                    formData.append('files', file);
+                });
+                
+                const response = await fetch('/api/ImageUploadApi/upload-multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 將新上傳的圖片URL加入到現有圖片列表
+                    createPostImages = [...createPostImages, ...result.urls];
+                    updateCreatePostImagePreview();
+                    updateCreatePostImageUrls();
+                    
+                    if (window.showSuccessToast) {
+                        window.showSuccessToast(`成功上傳 ${result.count} 張圖片`);
+                    }
+                } else {
+                    throw new Error(result.error || '上傳失敗');
+                }
+            } catch (error) {
+                console.error('上傳圖片失敗:', error);
+                alert('上傳圖片失敗: ' + error.message);
+            }
+        }
+
+        function updateCreatePostImagePreview() {
+            const previewArea = document.getElementById('createImagePreview');
+            const previewContainer = document.getElementById('previewContainer');
+            
+            if (createPostImages.length > 0) {
+                previewArea.style.display = 'block';
+                previewContainer.innerHTML = '';
+                
+                createPostImages.forEach((imageUrl, index) => {
+                    const colDiv = document.createElement('div');
+                    colDiv.className = 'col-auto position-relative';
+                    
+                    colDiv.innerHTML = `
+                        <img src="${imageUrl}" 
+                             class="img-thumbnail" 
+                             style="width: 100px; height: 100px; object-fit: cover;"
+                             alt="圖片 ${index + 1}">
+                        <button type="button" 
+                                class="btn btn-danger btn-sm position-absolute top-0 end-0 rounded-circle"
+                                style="width: 24px; height: 24px; padding: 0; margin: 2px;"
+                                onclick="removeCreatePostImage(${index})"
+                                title="刪除圖片">
+                            <i class="bi bi-x" style="font-size: 12px;"></i>
+                        </button>
+                    `;
+                    
+                    previewContainer.appendChild(colDiv);
+                });
+                
+                // 如果還沒到5張，顯示新增按鈕
+                if (createPostImages.length < 5) {
+                    const addColDiv = document.createElement('div');
+                    addColDiv.className = 'col-auto d-flex align-items-center';
+                    addColDiv.innerHTML = `
+                        <label for="createImageInput" class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" 
+                               style="width: 100px; height: 100px; cursor: pointer;">
+                            <i class="bi bi-plus-circle" style="font-size: 24px;"></i>
+                        </label>
+                    `;
+                    previewContainer.appendChild(addColDiv);
+                }
+            } else {
+                previewArea.style.display = 'none';
+            }
+        }
+
+        function removeCreatePostImage(index) {
+            if (index >= 0 && index < createPostImages.length) {
+                createPostImages.splice(index, 1);
+                updateCreatePostImagePreview();
+                updateCreatePostImageUrls();
+            }
+        }
+
+        function updateCreatePostImageUrls() {
+            const hiddenInput = document.getElementById('postImageUrls');
+            const vueInput = document.getElementById('postImageUrlsForVue');
+            const imageUrlsValue = createPostImages.length > 0 ? createPostImages.join(';') : '';
+            
+            if (hiddenInput) {
+                hiddenInput.value = imageUrlsValue;
+            }
+            if (vueInput) {
+                vueInput.value = imageUrlsValue;
+            }
+            
+            // console.log('🖼️ 更新圖片URLs:', imageUrlsValue); // 除錯用 - 生產環境移除
+        }
+
+        function clearCreatePostImages() {
+            createPostImages = [];
+            updateCreatePostImagePreview();
+            updateCreatePostImageUrls();
+        }
+
+        // 當模態框關閉時清空圖片
+        document.addEventListener('DOMContentLoaded', function() {
+            const createPostModal = document.getElementById('createPostModal');
+            if (createPostModal) {
+                createPostModal.addEventListener('hidden.bs.modal', function() {
+                    clearCreatePostImages();
+                });
+            }
+        });
+    </script>
+}

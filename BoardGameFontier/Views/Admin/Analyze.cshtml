@@ -1,0 +1,192 @@
+﻿@{
+    ViewData["Title"] = "後臺分析";
+}
+<div class="container-fluid">
+    <div class="row d-flex flex-grow-1">
+        <!-- 側邊選單 -->
+        @Html.Partial("_AdminSidebar")
+
+        <!-- 主內容區 -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div id="analyzeApp">
+                <h2 class="mt-4">後臺分析</h2>
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">總文章數</h5>
+                                <h3>{{summaryCards.totalNews}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">本月新增</h5>
+                                <h3>{{summaryCards.monthlyNews}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">總瀏覽次數</h5>
+                                <h3>{{summaryCards.totalWatch}}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 圖表分析 -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">文章發布趨勢（近30天）</div>
+                            <div class="card-body" style="height: 300px;">
+                                <canvas id="postTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">分類文章比例</div>
+                            <div class="card-body" style="height: 300px;">
+                                <canvas id="categoryPieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+</div>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Vue 3 -->
+<script src="https://unpkg.com/vue@3"></script>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                 summaryCards: {
+                     totalNews: "",
+                     monthlyNews: "",
+                     totalWatch:"" ,
+                },
+                postTrendLabels: [],
+                postTrendData: [],
+                categoryLabels: [],
+                categoryData: []
+            };
+        },
+        methods: {
+             fetchSummaryCards() {
+                return fetch('/api/analytics/summary')
+                    .then(res => res.json())
+                    .then(data => {
+                        this.summaryCards.totalNews = data.totalNews;
+                        this.summaryCards.monthlyNews = data.monthlyNews;
+                        this.summaryCards.totalWatch = data.totalWatch;
+                    })
+                    .catch(err => {
+                        console.error('取得摘要資料失敗：', err);
+                    });
+            },
+            fetchPostTrend() {
+                return fetch('/api/analytics/post-trend')
+                    .then(res => res.json())
+                    .then(data => {
+                        this.postTrendLabels = data.labels;
+                        this.postTrendData = data.data;
+                        this.initLineChart();
+                    })
+                    .catch(err => {
+                        console.error('取得發文趨勢資料失敗：', err);
+                    });
+            },
+            fetchCategoryDistribution() {
+                return fetch('/api/analytics/category-distribution')
+                    .then(res => res.json())
+                    .then(data => {
+                        this.categoryLabels = data.labels;
+                        this.categoryData = data.data;
+                        this.initPieChart();
+                    })
+                    .catch(err => {
+                        console.error('取得分類比例資料失敗：', err);
+                    });
+            },
+            fetchData() {
+                Promise.all([
+                    this.fetchSummaryCards(),
+                    this.fetchPostTrend(),
+                    this.fetchCategoryDistribution()
+                ]).then(() => {
+                    console.log("全部資料載入完畢");
+                });
+            },
+            initLineChart() {
+                const ctx = document.getElementById('postTrendChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: this.postTrendLabels,
+                        datasets: [{
+                            label: '發文數',
+                            data: this.postTrendData,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            tension: 0.4,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            },
+            initPieChart() {
+                const ctx = document.getElementById('categoryPieChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: this.categoryLabels,
+                        datasets: [{
+                            label: '文章數',
+                            data: this.categoryData,
+                            backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            },
+            fetchData() {
+                Promise.all([
+                    this.fetchSummaryCards(),
+                    this.fetchPostTrend(),
+                    this.fetchCategoryDistribution()
+                ]).then(() => {
+                    console.log("全部資料載入完畢");
+                });
+            }
+        },
+        mounted() {
+            this.fetchData();
+        }
+    }).mount('#analyzeApp');
+</script>
+

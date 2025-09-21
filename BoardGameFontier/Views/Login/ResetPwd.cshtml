@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "重設密碼";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+    <div class="card p-5 shadow" style="width: 400px;">
+        <h4 class="text-center mb-4">重設密碼</h4>
+
+        <form method="post">
+            @Html.AntiForgeryToken() <!--防止CSRF攻擊-->
+            <input type="hidden" name="Token" value="@Model.Token" /> <!--拿來接Token的-->
+
+            <div class="mb-3">
+                <label class="form-label">新密碼 <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" name="NewPassword" placeholder="請輸入新密碼" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">再次輸入密碼 <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" name="ConfirmPassword" placeholder="請再次輸入新密碼" required />
+            </div>
+
+            <button type="submit" class="btn btn-success w-100 mt-3">確認重設</button>
+        </form>
+
+        <div class="text-center mt-3">
+            <a href="@Url.Action("IndexLogin", "Login")" class="text-muted">返回登入畫面</a>
+        </div>
+    </div>
+</div>
+

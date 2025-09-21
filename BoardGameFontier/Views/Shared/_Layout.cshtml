@@ -1,0 +1,247 @@
+﻿@using BoardGameFontier.Constants
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BoardGameFrontier</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/BoardGameFontier.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @RenderSection("Styles", required: false)
+    <style>
+        <!---設定整個網站的字體為思源黑體--->
+        * {
+            font-family: 'Noto Sans TC';
+        }
+
+        .custom-nav-link {
+            border-right:solid 1px white;
+            width:5vw;
+            text-align:center;
+        }
+
+        .custom-nav-link:hover {
+        background: linear-gradient(to top, #A0D4C5, transparent);
+        }
+
+        .custom-navbar-nav a:last-child {
+            border: 0px;
+        }
+
+        /* 響應式導航列修正 */
+        @@media (max-width: 991px) {
+            .custom-nav-link {
+                width: auto !important;
+                min-width: 80px;
+                flex: 1;
+                border-right: none;
+                border-bottom: solid 1px rgba(255, 255, 255, 0.3);
+                padding: 12px 8px;
+            }
+            
+            .custom-navbar-nav {
+                flex-direction: column !important;
+                width: 100%;
+            }
+            
+            .custom-navbar-nav a:last-child {
+                border-bottom: none;
+            }
+            
+            .navbar-collapse {
+                margin-top: 10px;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .custom-nav-link {
+                min-width: 60px;
+                padding: 10px 6px;
+                font-size: 14px;
+            }
+        }
+
+        .titleButton {
+            text-align: center;
+            overflow: hidden;
+            position:relative;
+        }
+
+        .titleButton a{
+            margin:0 auto;
+            line-height:1.5vh;
+        }
+
+        .titleButton:before{
+            content: "";
+            position:absolute;
+            top:0;
+            left:-100%;
+            width: 100%;
+            height: 1px;
+            background-color:white;
+            transition: all 0.5s;
+        }
+
+        .titleButton:hover:before{
+            left:0;
+        }
+
+        .titleButton:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            right: -100%;
+            width: 100%;
+            height: 1px;
+            background-color: white;
+            transition: all 0.5s;
+        }
+
+        .titleButton:hover:after {
+            right: 0;
+        }
+
+
+        .titleButton:hover .ndEle:after {
+            bottom: 0;
+        }
+
+        .bgimg{
+            background-image: url('/img/bgf_bg.png');
+            background-repeat: repeat;
+            background-attachment: fixed;
+            background-position: top left;
+            background-size: auto;
+            min-height: 100vh;
+        }
+
+       /*  #userRole {
+            font-weight: 600;
+            color: #555;
+            transition: color 0.3s, font-weight 0.3s;
+        }
+
+        #userRole:hover {
+            font-weight: 700;
+            color: #c99700; /* 黃金色 */
+        /*} */
+    </style>
+</head>
+<body>
+    @if (!(ViewBag.HideHeaderFooter is bool hide && hide)) //用來在其他頁面不要出現Header和Footer
+    {
+        <header>
+            <nav class="navbar navbar-expand-sm navbar-light bg-primary border-bottom box-shadow">
+                <div class="container-fluid">
+                    <!-- 左側品牌 -->
+                    <a class="navbar-brand text-light fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
+                        BoardGameFrontier
+                    </a>
+
+                    <!-- 收合按鈕 -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                            aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <!-- 收合區域 -->
+                    <div class="collapse navbar-collapse" id="mainNavbar">
+                        <!-- 左側選單 -->
+                        <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+                            <li class="custom-nav-link">
+                                <a class="nav-link text-light fw-bold" asp-area="" asp-controller="Dex" asp-action="Index">圖鑑</a>
+                            </li>
+                            <li class="custom-nav-link">
+                                <a class="nav-link text-light fw-bold" asp-area="" asp-controller="News" asp-action="Index">新聞</a>
+                            </li>
+                            <li class="custom-nav-link">
+                                <a class="nav-link text-light fw-bold" asp-area="" asp-controller="Community" asp-action="Index">社群</a>
+                            </li>
+                            <li class="custom-nav-link">
+                                <a class="nav-link text-light fw-bold" asp-area="" asp-controller="Market" asp-action="Index">市集</a>
+                            </li>
+                            <li class="custom-nav-link">
+                                <a class="nav-link text-light fw-bold" asp-area="" asp-controller="Chat" asp-action="Index">聊天</a>
+                            </li>
+                        </ul>
+
+                        <!-- 右側登入身分 + 登入 partial -->
+                            <div class="text-white">
+                                您的身分為：
+                                @{
+                                    if (User.IsInRole(UserRolesLevel.Manufacturer))
+                                    {
+                                        <span class="bling-card me-3" id="userRole">特約廠商</span>
+                                    }
+                                    else if (User.IsInRole(UserRolesLevel.Admin))
+                                    {
+                                        <span class="bling-card me-3" id="userRole">網站管理員</span>
+                                    }
+                                    else if (User.IsInRole(UserRolesLevel.Gm))
+                                    {
+                                        <span class="bling-card me-3" id="userRole">特別玩家</span>
+                                    }
+                                    else if (User.IsInRole(UserRolesLevel.User))
+                                    {
+                                        <span class="bling-card me-3" id="userRole">桌遊玩家</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="bling-card me-3" id="userRole">桌遊旅客</span>
+                                    }
+                                }
+                            </div>
+                            <partial name="_LoginPartial"/>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+    }
+
+    <div class="bgimg">
+        <div class="main-wrapper">
+            @{
+                var controllerName = ViewContext.RouteData.Values["controller"]?.ToString();
+                var isCommunityPage = controllerName == "Community" || controllerName == "Credits";
+                var containerClass = isCommunityPage ? "container-fluid" : "container";
+            }
+            <div class="@containerClass">
+                <main role="main" class="pb-3">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    </div>
+
+    @if (!(ViewBag.HideHeaderFooter is bool hide2 && hide2))
+    {
+        <footer class="border-top footer text-muted py-3" style="line-height:0">
+            <div class="container">
+                <div class="row text-center text-md-start">
+                    <div class="col-12 col-md-auto mb-2 mb-md-0" style="line-height:128%">
+                        &copy; 2025 - BoardGameFrontier
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <a class="btn btn-link p-0 me-3" asp-area="" asp-controller="Home" asp-action="Privacy">隱私權政策</a>
+                        <a class="btn btn-link p-0 me-3" asp-area="" asp-controller="" asp-action="">聯絡我們</a>
+                        <a class="btn btn-link p-0" asp-area="" asp-controller="Credits" asp-action="Index">製作團隊</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    }
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Vue.js 3 - 全域版本 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/signalr.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

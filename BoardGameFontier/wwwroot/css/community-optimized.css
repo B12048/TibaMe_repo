@@ -1,0 +1,1832 @@
+/* ========================================
+   桌遊前線社群頁面 - 優化重構版本
+   - 移除重複定義
+   - 統一命名空間
+   - 簡化結構
+======================================== */
+
+/* ========================================
+   1. CSS Variables (全域)
+======================================== */
+:root {
+    /* 主題色彩 */
+    --primary-color: #14b8a6;
+    --primary-light: #5eead4;
+    --primary-dark: #0f766e;
+    --secondary-color: #0891b2;
+    --accent-color: #06b6d4;
+    --accent-dark: #0891b2;
+    
+    /* 文字色彩 */
+    --text-primary: #0f2419;
+    --text-secondary: rgba(15, 36, 25, 0.8);
+    --text-light: rgba(15, 36, 25, 0.6);
+    
+    /* 狀態色彩 */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --like-color: #e11d48;
+    --like-color-dark: #be185d;
+    
+    /* 毛玻璃效果 */
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-bg-medium: rgba(255, 255, 255, 0.15);
+    --glass-bg-strong: rgba(255, 255, 255, 0.25);
+    --glass-border: rgba(20, 184, 166, 0.2);
+    --glass-shadow: 0 4px 16px rgba(20, 184, 166, 0.1);
+    --glass-shadow-hover: 0 8px 32px rgba(20, 184, 166, 0.15);
+    --glass-blur: blur(10px);
+    
+    /* 動畫 */
+    --transition-base: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-fast: all 0.2s ease-out;
+    --transition-slow: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    
+    /* 間距系統 */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --spacing-2xl: 24px;
+    --spacing-3xl: 32px;
+    
+    /* 圓角系統 */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 50px;
+}
+
+/* ========================================
+   2. 社群容器命名空間 (所有樣式都在此作用域下)
+======================================== */
+.community-container {
+    /* 基礎設定 */
+    font-family: 'Noto Sans TC', 'Noto Sans CJK TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.5;
+    color: var(--text-primary);
+    width: 100%;
+    padding: 20px;
+    min-height: calc(100vh - 120px);
+    max-width: 1400px;
+    margin: 0 auto;
+    background: transparent;
+}
+
+/* ========================================
+   3. 通用工具類別
+======================================== */
+.community-container .text-weight-light { font-weight: 300; }
+.community-container .text-weight-normal { font-weight: 400; }
+.community-container .text-weight-medium { font-weight: 500; }
+.community-container .text-weight-semibold { font-weight: 600; }
+.community-container .text-weight-bold { font-weight: 700; }
+
+.community-container .line-height-tight { line-height: 1.3; }
+.community-container .line-height-normal { line-height: 1.5; }
+.community-container .line-height-relaxed { line-height: 1.6; }
+
+/* ========================================
+   4. 布局結構
+======================================== */
+.community-container .main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: calc(100vh - 140px);
+}
+
+.community-container .posts-area {
+    position: relative;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-shadow);
+    min-height: 600px;
+}
+
+.community-container .posts-list-view {
+    width: 100%;
+    min-height: 600px;
+}
+
+.community-container .post-detail-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #f8f9fa;
+    z-index: 10;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: var(--glass-blur);
+    border-radius: 16px;
+    border: 1px solid rgba(20, 184, 166, 0.1);
+}
+
+/* ========================================
+   5. 頂部操作列
+======================================== */
+.community-container .top-bar {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--glass-shadow);
+    gap: 1rem;
+}
+
+.community-container .category-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.community-container .category-tab {
+    padding: 8px 16px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--primary-color);
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-base);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.community-container .category-tab:hover {
+    background: rgba(20, 184, 166, 0.1);
+    transform: translateY(-1px);
+}
+
+.community-container .category-tab.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+}
+
+.community-container .action-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.community-container .search-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.community-container .search-input {
+    width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
+    outline: none;
+    transition: var(--transition-base);
+}
+
+.community-container .search-input:focus {
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2);
+}
+
+.community-container .search-btn,
+.community-container .create-post-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-base);
+    text-decoration: none;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+}
+
+.community-container .search-btn {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+}
+
+.community-container .search-btn:hover {
+    background: #0f766e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+.community-container .create-post-btn {
+    background: var(--accent-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.2);
+}
+
+.community-container .create-post-btn:hover {
+    background: #0891b2;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+/* ========================================
+   6. 輪播圖區域
+======================================== */
+.community-container #communityCarousel {
+    margin-bottom: 20px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--glass-shadow);
+}
+
+.community-container .carousel-game-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center 25%;
+    border-radius: 8px;
+    height: 200px;
+    margin-top: 10px;
+}
+
+.community-container .carousel-game-banner .text-center {
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.8);
+    position: relative;
+    z-index: 1;
+}
+
+.community-container .carousel-game-banner h3,
+.community-container .carousel-game-banner p {
+    color: white !important;
+}
+
+.community-container .carousel-link {
+    display: block;
+    text-decoration: none;
+    color: white;
+    transition: var(--transition-base);
+    cursor: pointer;
+}
+
+.community-container .carousel-link:hover {
+    text-decoration: none;
+    color: white;
+}
+
+.community-container .carousel-link:hover .carousel-game-banner {
+    transform: scale(1.02);
+    transition: var(--transition-base);
+}
+
+.community-container .carousel-indicators [data-bs-target] {
+    background-color: var(--primary-color);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.community-container .carousel-indicators .active {
+    background-color: var(--accent-color);
+    border-color: white;
+}
+
+.community-container .carousel-control-prev,
+.community-container .carousel-control-next {
+    width: 5%;
+    color: var(--primary-color);
+}
+
+.community-container .carousel-control-prev-icon,
+.community-container .carousel-control-next-icon {
+    background-color: rgba(20, 184, 166, 0.8);
+    border-radius: 50%;
+    padding: 15px;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+
+/* ========================================
+   7. 文章卡片區域 (合併所有 post-card 相關樣式)
+======================================== */
+.community-container .posts-grid {
+    background: transparent;
+    border-radius: 12px;
+    flex-grow: 1;
+}
+
+.community-container .loading-indicator {
+    text-align: center;
+    padding: 40px;
+    width: 100%;
+}
+
+/* 統一的文章卡片樣式 */
+.community-container .post-card {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition-base);
+    position: relative;
+    min-height: 320px;
+    max-height: 380px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 0;
+    box-sizing: border-box;
+    animation: fadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.community-container .post-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+    z-index: 1;
+}
+
+.community-container .post-card:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: translateY(-4px);
+    box-shadow: 
+        0 8px 32px rgba(20, 184, 166, 0.15),
+        0 4px 16px rgba(0, 0, 0, 0.1);
+    border-color: rgba(20, 184, 166, 0.3);
+}
+
+/* 微光效果 */
+.community-container .post-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+    transition: left 0.8s ease;
+    pointer-events: none;
+}
+
+.community-container .post-card:hover::after {
+    left: 100%;
+}
+
+/* 搜索高亮 */
+.community-container .post-card mark {
+    background: linear-gradient(135deg, rgba(255, 235, 59, 0.9) 0%, rgba(255, 193, 7, 0.9) 100%);
+    color: var(--text-primary);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+/* ========================================
+   8. 文章卡片內容結構
+======================================== */
+.community-container .post-content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.community-container .post-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 16px 12px 16px;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    height: 60px;
+    box-sizing: border-box;
+}
+
+.community-container .post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(20, 184, 166, 0.1);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    border: 1px solid var(--glass-border);
+    overflow: hidden;
+    transition: var(--transition-base);
+    cursor: pointer;
+}
+
+.community-container .post-avatar:hover {
+    transform: scale(1.1);
+    border-color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+.community-container .post-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.community-container .post-username {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: var(--transition-base);
+}
+
+.community-container .post-username.author-link {
+    cursor: pointer;
+}
+
+.community-container .post-username.author-link:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+
+.community-container .post-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* ========================================
+   9. 追蹤按鈕
+======================================== */
+.community-container .follow-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--primary-color);
+    background: transparent;
+    color: var(--primary-color);
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    min-width: 65px;
+    justify-content: center;
+}
+
+.community-container .follow-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+}
+
+.community-container .follow-btn.followed {
+    background: var(--primary-color);
+    color: white;
+}
+
+.community-container .follow-btn.followed:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: white;
+}
+
+.community-container .follow-btn.followed:hover .follow-text {
+    display: none;
+}
+
+.community-container .follow-btn.followed:hover::after {
+    content: '取消追蹤';
+}
+
+.community-container .follow-btn i {
+    font-size: 10px;
+}
+
+.community-container .follow-btn .follow-text {
+    font-size: 11px;
+}
+
+/* ========================================
+   10. 貼文內容樣式
+======================================== */
+.community-container .post-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin: 0 16px 10px 16px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    height: 52px;
+    max-height: 52px;
+}
+
+.community-container .post-title-section {
+    gap: 16px;
+    align-items: flex-start;
+    margin-right: 12px;
+}
+
+.community-container .post-thumbnail-container {
+    position: relative;
+    cursor: pointer;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: var(--transition-base);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.community-container .post-thumbnail-container:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
+}
+
+.community-container .post-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    transition: var(--transition-base);
+}
+
+.community-container .post-thumbnail:hover {
+    filter: brightness(1.1);
+}
+
+.community-container .image-count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 10px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 2px solid white;
+}
+
+.community-container .post-title-section .post-title {
+    line-height: 1.4;
+    font-size: 1.1rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    max-width: 100%;
+    display: block;
+    margin: 0 8px 0 5px;
+}
+
+.community-container .post-preview {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 16px 12px 16px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    position: relative;
+    z-index: 2;
+    font-weight: 400;
+    flex: 1;
+    max-height: 96px;
+}
+
+/* ========================================
+   11. 右上角分類標籤
+======================================== */
+.community-container .post-category-tag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    max-width: 120px;
+    min-height: 24px;
+    box-sizing: border-box;
+}
+
+.community-container .post-category-tag:hover {
+    transform: scale(1.05) translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.community-container .post-category-tag .category-icon {
+    font-size: 12px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.community-container .post-category-tag .category-text {
+    line-height: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+/* 不同類型標籤的顏色樣式 */
+.community-container .post-category-tag.review {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.community-container .post-category-tag.question {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(29, 78, 216, 0.95) 100%);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.community-container .post-category-tag.trade {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.95) 0%, rgba(8, 145, 178, 0.95) 100%);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.community-container .post-category-tag.creation {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.95) 0%, rgba(124, 58, 237, 0.95) 100%);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.community-container .post-category-tag.discussion {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.95) 0%, rgba(75, 85, 99, 0.95) 100%);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ========================================
+   12. 交易資訊預覽區域
+======================================== */
+.community-container .trade-info-preview {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(14, 165, 233, 0.1) 100%);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 8px 16px 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(4px);
+    position: relative;
+    z-index: 2;
+}
+
+.community-container .trade-price {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.9) 0%, rgba(14, 165, 233, 0.9) 100%);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 4px rgba(6, 182, 212, 0.2);
+}
+
+.community-container .trade-location {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.community-container .post-card[data-type="2"] .trade-info-preview {
+    border-color: rgba(6, 182, 212, 0.4);
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(14, 165, 233, 0.08) 100%);
+}
+
+/* ========================================
+   13. 文章卡片底部操作區 (統一所有 post-action 相關樣式)
+======================================== */
+.community-container .post-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-top: 1px solid rgba(20, 184, 166, 0.15);
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.12) 0%, 
+        rgba(255, 255, 255, 0.08) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    position: relative;
+    z-index: 2;
+    margin-top: auto;
+    flex-shrink: 0;
+    height: 45px;
+    box-sizing: border-box;
+}
+
+.community-container .post-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 70%;
+    justify-content: left;
+}
+
+/* 統一的按鈕樣式 */
+.community-container .post-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1.5px solid rgba(20, 184, 166, 0.1);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    padding: 8px 14px;
+    border-radius: 20px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    position: relative;
+    overflow: hidden;
+    min-width: 65px;
+    max-height: 32px;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+}
+
+/* 按鈕內部發光效果 */
+.community-container .post-action::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        transparent 50%);
+    opacity: 0;
+    transition: var(--transition-base);
+    pointer-events: none;
+}
+
+.community-container .post-action:hover::before {
+    opacity: 1;
+}
+
+/* 通用懸停效果 */
+.community-container .post-action:hover {
+    color: var(--primary-color);
+    background: rgba(20, 184, 166, 0.15);
+    border-color: rgba(20, 184, 166, 0.3);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(20, 184, 166, 0.25);
+}
+
+/* 按鈕圖示樣式 */
+.community-container .post-action-icon {
+    font-size: 18px;
+    transition: var(--transition-base);
+}
+
+.community-container .post-action:hover .post-action-icon {
+    transform: scale(1.2);
+}
+
+/* 按鈕數字樣式 */
+.community-container .post-action-count {
+    font-size: 15px;
+    font-weight: 700;
+    color: inherit;
+    transition: color 0.3s ease;
+}
+
+/* ========================================
+   14. 特殊按鈕樣式
+======================================== */
+/* 按讚按鈕 */
+.community-container .post-action.like-btn {
+    position: relative;
+}
+
+.community-container .post-action.like-btn:hover {
+    color: #e11d48;
+    background: rgba(225, 29, 72, 0.15);
+    border-color: rgba(225, 29, 72, 0.3);
+    box-shadow: 0 6px 20px rgba(225, 29, 72, 0.25);
+}
+
+.community-container .post-action.like-btn.liked {
+    color: white;
+    background: linear-gradient(135deg, #e11d48 0%, #be185d 100%);
+    border-color: #e11d48;
+    box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4);
+}
+
+.community-container .post-action.like-btn.liked:hover {
+    transform: translateY(-2px) scale(1.1);
+    box-shadow: 0 8px 25px rgba(225, 29, 72, 0.5);
+}
+
+.community-container .post-action.like-btn.liked .post-action-icon {
+    animation: heartBeat 0.6s ease-in-out;
+}
+
+.community-container .post-action.like-btn.heart-beat {
+    animation: fastHeartBeat 0.4s ease-in-out;
+}
+
+/* 留言按鈕 */
+.community-container .post-action.comment-btn:hover {
+    color: #0891b2;
+    background: rgba(8, 145, 178, 0.15);
+    border-color: rgba(8, 145, 178, 0.3);
+    box-shadow: 0 6px 20px rgba(8, 145, 178, 0.25);
+}
+
+/* 分享/觀看按鈕 */
+.community-container .post-action.view-btn:hover,
+.community-container .post-action.share-btn:hover {
+    color: #059669;
+    background: rgba(5, 150, 105, 0.15);
+    border-color: rgba(5, 150, 105, 0.3);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.25);
+}
+
+/* 檢舉按鈕 */
+.community-container .post-action.violation-btn {
+    color: var(--text-secondary);
+}
+
+.community-container .post-action.violation-btn:hover {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.3);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.25);
+}
+
+/* 載入中的按鈕狀態 */
+.community-container .post-action.loading {
+    pointer-events: none;
+    opacity: 0.8;
+    transform: scale(0.95);
+}
+
+.community-container .post-action.loading .post-action-icon {
+    animation: fastSpin 0.6s linear infinite;
+}
+
+/* 樂觀更新狀態 */
+.community-container .post-action.optimistic-pending {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.community-container .post-action.liked.optimistic-success {
+    animation: optimisticSuccess 0.3s ease-out;
+}
+
+/* 按鈕點擊反饋 */
+.community-container .post-action:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-out;
+}
+
+.community-container .post-action:not(:active) {
+    transition: transform 0.2s ease-out;
+}
+
+.community-container .post-action .post-action-icon,
+.community-container .post-action .post-action-count {
+    transition: all 0.2s ease-out;
+}
+
+/* ========================================
+   15. Modal 樣式 (發表貼文)
+======================================== */
+.community-container #createPostModal .modal-dialog {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: scale(0.8) translateY(-50px);
+    opacity: 0;
+}
+
+.community-container #createPostModal.show .modal-dialog {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.community-container #createPostModal .modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95) 0%, 
+        rgba(255, 255, 255, 0.9) 100%);
+    overflow: hidden;
+}
+
+.community-container #createPostModal .modal-header {
+    background: linear-gradient(135deg, 
+        var(--primary-color) 0%, 
+        var(--accent-color) 100%);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 32px;
+    border-bottom: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.community-container #createPostModal .modal-title {
+    color: white;
+    font-weight: 600;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.community-container #createPostModal .modal-body {
+    padding: 32px;
+    background: linear-gradient(180deg, 
+        rgba(255, 255, 255, 0.02) 0%, 
+        rgba(249, 250, 251, 0.05) 100%);
+}
+
+.community-container #createPostModal .form-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.2s ease;
+}
+
+.community-container #createPostModal .form-control,
+.community-container #createPostModal .form-select {
+    border: 2px solid rgba(20, 184, 166, 0.08);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 1rem;
+    line-height: 1.5;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.community-container #createPostModal .form-control:focus,
+.community-container #createPostModal .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 
+        0 0 0 0.25rem rgba(20, 184, 166, 0.12),
+        0 4px 12px rgba(20, 184, 166, 0.08);
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-1px) scale(1.01);
+    outline: none;
+}
+
+.community-container #createPostModal .form-select {
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.community-container #createPostModal .form-select:hover {
+    border-color: rgba(20, 184, 166, 0.4);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.community-container #createPostModal .modal-footer {
+    background: linear-gradient(180deg, 
+        rgba(249, 250, 251, 0.5) 0%, 
+        rgba(249, 250, 251, 0.8) 100%);
+    border-radius: 0 0 20px 20px;
+    padding: 24px 32px;
+    border-top: 1px solid rgba(229, 231, 235, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.community-container #createPostModal .modal-footer .btn {
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.community-container #createPostModal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, 
+        var(--primary-color) 0%, 
+        var(--accent-color) 100%);
+    border: none;
+    box-shadow: 
+        0 4px 15px rgba(20, 184, 166, 0.25),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.community-container #createPostModal .modal-footer .btn-primary:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+        0 8px 25px rgba(20, 184, 166, 0.35),
+        0 4px 12px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, 
+        #0f766e 0%, 
+        #0891b2 100%);
+}
+
+.community-container #createPostModal #tradeFields {
+    background: linear-gradient(135deg, 
+        rgba(251, 191, 36, 0.08) 0%, 
+        rgba(251, 191, 36, 0.03) 100%);
+    border: 2px solid rgba(251, 191, 36, 0.15);
+    border-radius: 18px;
+    padding: 24px;
+    margin-top: 24px;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ========================================
+   16. 分頁區域
+======================================== */
+.community-container .pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    width: 100%;
+}
+
+.community-container #postsPaginationNav {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.community-container .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.community-container .pagination .page-link {
+    background: var(--glass-bg);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    margin: 0 2px;
+    transition: var(--transition-base);
+    padding: 8px 12px;
+    text-decoration: none;
+}
+
+.community-container .pagination .page-link:hover {
+    background: rgba(20, 184, 166, 0.1);
+    color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+}
+
+.community-container .pagination .page-item.active .page-link {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+}
+
+/* ========================================
+   17. 錯誤訊息和無結果顯示
+======================================== */
+.community-container .error-message,
+.community-container .no-results-message {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    color: var(--text-secondary);
+    margin: 20px 0;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.community-container .error-message {
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+/* ========================================
+   18. 詳細頁面相關
+======================================== */
+.community-container .post-detail-content {
+    min-height: 400px;
+    width: 100%;
+    padding: 0;
+}
+
+.community-container .post-detail-header {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-bottom: 2px solid var(--primary-color);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(20, 184, 166, 0.1);
+}
+
+.community-container .post-detail-header #backToListBtn {
+    background: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+    transition: var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.community-container .post-detail-header #backToListBtn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateX(-3px);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+.community-container .post-content-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    background: #f8f9fa;
+}
+
+.community-container .post-detail-full-panel {
+    width: 100%;
+    height: 100%;
+    background: #f8f9fa;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: var(--glass-shadow);
+}
+
+.community-container .community-main-view {
+    width: 100%;
+    height: 100%;
+}
+
+/* ========================================
+   19. 動畫定義 (統一所有動畫)
+======================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.3); }
+    50% { transform: scale(1.1); }
+    75% { transform: scale(1.25); }
+    100% { transform: scale(1.2); }
+}
+
+@keyframes fastHeartBeat {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.25); }
+    40% { transform: scale(1.05); }
+    60% { transform: scale(1.15); }
+    80% { transform: scale(1.08); }
+    100% { transform: scale(1.1); }
+}
+
+@keyframes fastSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes optimisticSuccess {
+    0% {
+        background-color: transparent;
+    }
+    50% {
+        background-color: rgba(20, 184, 166, 0.1);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+@keyframes error-shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-3px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(3px);
+    }
+}
+
+@keyframes heart-beat {
+    0% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.15);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    75% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.community-container .error-shake {
+    animation: error-shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+.community-container .heart-beat {
+    animation: heart-beat 0.4s ease-in-out;
+}
+
+/* 動畫應用 */
+.community-container .top-bar,
+.community-container #communityCarousel {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.community-container .post-detail-view {
+    animation: slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.community-container .posts-list-view.slide-in-left {
+    animation: slideInLeft 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ========================================
+   20. 滾動條樣式
+======================================== */
+.community-container .post-content-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.community-container .post-content-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.community-container .post-content-container::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+    opacity: 0.7;
+}
+
+.community-container .post-content-container::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+    opacity: 1;
+}
+
+/* ========================================
+   21. 響應式設計 (合併所有 @media 查詢)
+======================================== */
+
+/* 4K 解析度優化 */
+@media (min-width: 3840px) {
+    .community-container {
+        max-width: 3600px;
+        padding: 40px;
+    }
+    
+    .community-container .top-bar {
+        padding: 24px 32px;
+        border-radius: 20px;
+    }
+    
+    .community-container .posts-container {
+        gap: 32px;
+        padding: 20px 0;
+    }
+    
+    .community-container .post-card {
+        border-radius: 20px;
+    }
+}
+
+/* 2K 解析度優化 */
+@media (min-width: 2560px) and (max-width: 3839px) {
+    .community-container {
+        max-width: 85%;
+        padding: 32px;
+    }
+    
+    .community-container .top-bar {
+        padding: 20px 28px;
+        border-radius: 18px;
+    }
+    
+    .community-container .category-tab {
+        padding: 9px 16px;
+        font-size: 14px;
+        border-radius: 20px;
+    }
+    
+    .community-container .category-tabs {
+        gap: 6px;
+    }
+    
+    .community-container .search-input {
+        width: 200px;
+        padding: 9px 12px;
+        font-size: 14px;
+    }
+    
+    .community-container .posts-container {
+        gap: 28px;
+        padding: 16px 0;
+    }
+}
+
+/* 1080P 解析度優化 */
+@media (min-width: 1920px) and (max-width: 2559px) {
+    .community-container {
+        max-width: 1800px;
+        padding: 24px;
+    }
+    
+    .community-container .posts-container {
+        gap: 24px;
+    }
+}
+
+/* 標準桌面 */
+@media (min-width: 1200px) and (max-width: 1919px) {
+    .community-container {
+        padding: 20px;
+    }
+    
+    .community-container .search-input {
+        width: 200px;
+    }
+}
+
+/* 平板橫向 */
+@media (min-width: 993px) and (max-width: 1199px) {
+    .community-container {
+        padding: 16px;
+    }
+    
+    .community-container .category-tab {
+        padding: 7px 14px;
+        font-size: 13px;
+    }
+    
+    .community-container .search-input {
+        width: 180px;
+        padding: 7px 11px;
+        font-size: 13px;
+    }
+    
+    .community-container .posts-container {
+        gap: 16px;
+    }
+}
+
+/* 平板直向與小筆電 */
+@media (max-width: 992px) {
+    .community-container {
+        padding: 16px;
+    }
+    
+    .community-container .top-bar {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .community-container .category-tabs {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .community-container .search-container {
+        width: 100%;
+    }
+    
+    .community-container .action-area {
+        justify-content: center;
+    }
+    
+    .community-container .create-post-btn {
+        min-width: 120px;
+        white-space: nowrap;
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
+
+/* 手機橫向 */
+@media (max-width: 768px) {
+    .community-container {
+        padding: 12px;
+    }
+    
+    .community-container .top-bar {
+        padding: 14px 16px;
+        gap: 12px;
+    }
+    
+    .community-container .category-tabs {
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+    }
+    
+    .community-container .category-tab {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+    
+    .community-container .search-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .community-container .search-input {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    .community-container .create-post-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+        min-width: 100px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+    
+    /* 輪播響應式優化 */
+    .community-container .carousel-game-banner {
+        height: 150px;
+    }
+    
+    .community-container .carousel-game-banner h3 {
+        font-size: 1.2rem;
+    }
+    
+    .community-container .carousel-game-banner p {
+        font-size: 0.9rem;
+    }
+    
+    /* 手機版卡片調整 */
+    .community-container .post-card {
+        min-height: 300px;
+        margin-bottom: 16px;
+    }
+    
+    .community-container .post-header {
+        padding: 12px 12px 8px 12px;
+    }
+    
+    .community-container .post-title {
+        font-size: 16px;
+        margin: 0 12px 0px 12px;
+        height: 50px;
+    }
+    
+    .community-container .post-preview {
+        font-size: 14px;
+        margin: 0 12px 12px 12px;
+        -webkit-line-clamp: 3;
+        max-height: 72px;
+    }
+    
+    .community-container .post-footer {
+        padding: 12px 12px;
+        height: 56px;
+    }
+    
+    .community-container .post-actions {
+        gap: 20px;
+    }
+    
+    .community-container .post-action {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-width: 60px;
+        max-height: 28px;
+    }
+    
+    /* 手機版右上角標籤調整 */
+    .community-container .post-category-tag {
+        top: 6px;
+        right: 6px;
+        padding: 4px 8px;
+        font-size: 9px;
+        max-width: 70px;
+        min-height: 20px;
+        border-radius: 10px;
+    }
+    
+    .community-container .post-category-tag .category-icon {
+        font-size: 10px;
+    }
+    
+    /* Modal 手機版優化 */
+    .community-container #createPostModal .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .community-container #createPostModal .modal-content {
+        border-radius: 16px;
+    }
+    
+    .community-container #createPostModal .modal-header {
+        padding: 20px 24px;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .community-container #createPostModal .modal-body {
+        padding: 24px 20px;
+    }
+    
+    .community-container #createPostModal .modal-footer {
+        padding: 20px 24px;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .community-container #createPostModal .modal-footer .btn {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 0.95rem;
+    }
+    
+    /* 面板響應式調整 */
+    .community-container .post-detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+    
+    .community-container .post-detail-view .post-detail-container {
+        padding: 1rem;
+    }
+    
+    /* 縮圖響應式調整 */
+    .community-container .post-title-section {
+        gap: 12px;
+        margin-right: 8px;
+    }
+    
+    .community-container .post-thumbnail-container {
+        margin-right: 4px;
+    }
+    
+    .community-container .post-thumbnail {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .community-container .post-title-section .post-title {
+        font-size: 1.05rem;
+    }
+    
+    .community-container .heart-beat {
+        animation-duration: 0.3s;
+    }
+}
+
+/* 小型手機螢幕 */
+@media (max-width: 576px) {
+    .community-container {
+        padding: 8px;
+    }
+    
+    .community-container .top-bar {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+    
+    .community-container .category-tab {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    
+    .community-container .create-post-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+        min-width: 80px;
+    }
+    
+    .community-container .search-input {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    /* 極小螢幕輪播優化 */
+    .community-container .carousel-game-banner {
+        height: 120px;
+    }
+    
+    .community-container .carousel-game-banner h3 {
+        font-size: 1rem;
+    }
+    
+    .community-container .carousel-game-banner p {
+        font-size: 0.8rem;
+    }
+    
+    .community-container .post-card {
+        min-height: 280px;
+        margin-bottom: 12px;
+    }
+    
+    .community-container .post-title {
+        font-size: 15px;
+        height: 46px;
+    }
+    
+    .community-container .post-preview {
+        font-size: 13px;
+        -webkit-line-clamp: 3;
+        max-height: 60px;
+    }
+    
+    .community-container .post-title-section {
+        gap: 10px;
+        margin-right: 6px;
+    }
+    
+    .community-container .post-thumbnail-container {
+        margin-right: 2px;
+    }
+    
+    .community-container .post-thumbnail {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .community-container .post-title-section .post-title {
+        font-size: 1rem;
+        line-height: 1.3;
+    }
+    
+    .community-container .image-count-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 8px;
+        top: -3px;
+        right: -3px;
+    }
+}
+
+/* 大螢幕優化 */
+@media (min-width: 1400px) {
+    .community-container {
+        max-width: 1600px;
+    }
+    
+    .community-container .posts-area {
+        min-height: 600px;
+    }
+}
+
+/* ========================================
+   22. 結束
+======================================== */

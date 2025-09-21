@@ -1,0 +1,163 @@
+﻿@model NewsViewModel
+@{
+    bool islogging = User.Identity.IsAuthenticated;
+    string UserName = User.Identity.Name;
+}
+@section Styles{
+    <style>
+        .new-bg {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: rgba(20, 184, 166, 0.2) solid 0.5px;
+        }
+
+        .card-header {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .card-header h1{
+            font-weight:700;
+        }
+
+        .card-body {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        #newsContent img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1rem auto;
+            border-radius: 8px;
+        }
+
+        .comment-bg{
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: rgba(20, 184, 166, 0.2) solid 0.5px;
+        }
+
+        .comment-avatar img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+        }
+
+        .comment-text {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            color: #333;
+        }
+    </style>
+}
+<div class="container-fluid">
+    <div class="row mt-3">
+        <!---左側欄開始--->
+        <div class="col-3">
+            <partial name="~/Views/Shared/Partials/_CommunityLeftSidebar.cshtml" />
+        </div>
+        <div class="col-9">
+        <div class=" new-bg card shadow-sm border-0">
+            <!-- 標題區 -->
+            <div class="card-header bg-secondary text-white py-3 rounded-top">
+                <h1 class="fs-3 mb-1">@Model.news.Title</h1>
+                <small class="text-white-50">
+                    瀏覽數：@Model.news.PageView　
+                    拍手數：@Model.news.Claps
+                </small>
+            </div>
+
+            <!-- 內容區 -->
+            <div class="card-body" id="newsContent">
+                @Html.Raw(Model.news.Content)
+            </div>
+        </div>
+        <h2 class="mt-4">新聞回應</h2>
+            <div id="app"  class="row g-3">
+                <div class="border-0">
+                    <div class="comment-bg shadow-sm mb-3 p-3 border-0" v-for="com in NewsComments" :key="com.id">
+                            <div class="d-flex align-items-start">
+                                <!-- 頭像 -->
+                                <div class="comment-avatar me-3 flex-shrink-0">
+                                    <img :src="com.profilePictureUrl" class="rounded-circle" />
+                                </div>
+                                <!-- 內容 -->
+                                <div class="comment-content flex-grow-1">
+                                    <h6 class="mb-1 fw-semibold">{{com.displayName}}</h6>
+                                    <p class="mb-2 comment-text">{{com.content}}</p>
+                                <small class="text-muted">{{new Date(com.created).toLocaleString()}}</small>
+                                </div>
+                            </div>
+                        </div>
+                    @if (islogging)
+                    {
+                        <div class="comment-bg card mt-3 shadow-sm">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-end">
+                                    <input v-model="CommentContext" id="sendMessage" class="form-control me-2" style="width: 90%;" rows="1" placeholder="輸入訊息"/>
+                                    <button v-on:click="submitComment" class="btn btn-primary" style="width: 10%;" id="BtnSendMessage"><i class="bi bi-send me-2"></i>送出</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <span>請先登入才能發送訊息</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+<script>
+    const newsId = @Model.news.Id;
+    const userName = '@UserName'; 
+
+Vue.createApp({
+    data(){
+        return{
+            CommentContext:"",
+            NewsComments:[]
+    }},
+    methods:{
+            async getNewsComments(i) {
+                console.log("查詢 id:", i);
+                const result = await fetch(`/News/GetNewsComments?id=${i}`);
+                const data = await result.json();
+                console.log("取得的資料:", data);
+                this.NewsComments = data;
+            },
+            async submitComment() {
+            const newComment = {
+                    NewsId: newsId,
+                    UserName: userName,
+                    Content: this.CommentContext
+            };
+
+            const response = await fetch('/News/SubmitComment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newComment)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.NewsComments.push(data);
+                this.CommentContext="";
+            } else {
+                const error = await response.json();
+            }
+        }
+    },
+    mounted(){
+        this.getNewsComments(newsId);
+    }
+}).mount('#app');
+</script>
+
+}

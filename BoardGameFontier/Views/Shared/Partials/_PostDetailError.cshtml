@@ -1,0 +1,71 @@
+﻿@*
+    貼文載入錯誤頁面
+    當無法載入貼文詳情時顯示
+*@
+
+<div class="post-error-panel">
+    <div class="error-content">
+        <div class="error-icon">
+            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+        </div>
+        <div class="error-message">
+            <h4>載入失敗</h4>
+            <p class="text-muted">
+                @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+                {
+                    @ViewBag.ErrorMessage
+                }
+                else
+                {
+                    @:抱歉，無法載入此貼文。可能是網路問題或貼文已被刪除。
+                }
+            </p>
+        </div>
+        <div class="error-actions">
+            <button class="btn btn-primary" id="retryLoadErrorBtn">
+                <i class="bi bi-arrow-clockwise"></i>
+                重新載入
+            </button>
+            <button class="btn btn-outline-secondary" id="backToListErrorBtn">
+                <i class="bi bi-arrow-left"></i>
+                返回列表
+            </button>
+        </div>
+    </div>
+</div>
+
+@* CSS 樣式已移至 PostDetailPanel.css *@
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    'use strict';
+    
+    // 重新載入按鈕事件
+    const retryBtn = document.getElementById('retryLoadErrorBtn');
+    if (retryBtn) {
+        retryBtn.addEventListener('click', function() {
+            console.log('錯誤頁面：重新載入按鈕被點擊');
+            // 嘗試重新載入當前貼文
+            if (window.location.hash && window.location.hash.startsWith('#post-')) {
+                const postId = window.location.hash.replace('#post-', '');
+                if (window.communityApp && typeof window.communityApp.loadPostDetail === 'function') {
+                    window.communityApp.loadPostDetail(postId);
+                }
+            }
+        });
+    }
+    
+    // 返回列表按鈕事件
+    const backBtn = document.getElementById('backToListErrorBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', function() {
+            console.log('錯誤頁面：返回列表按鈕被點擊');
+            if (window.communityApp && typeof window.communityApp.showPostsList === 'function') {
+                window.communityApp.showPostsList();
+            }
+        });
+    }
+    
+    console.log('PostDetailError 初始化完成');
+});
+</script>

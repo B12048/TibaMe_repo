@@ -1,0 +1,127 @@
+﻿@model EditProfileViewModel
+
+
+<!-- 大頭貼顯示與上傳 -->
+<img id="Portrait"
+     class=" rounded-circle d-block mx-auto"
+     src="@(string.IsNullOrWhiteSpace(Model.ProfilePictureUrl) ? Url.Content("~/img/noPortrait.png") : Model.ProfilePictureUrl)"
+     style="width:200px; height:200px; object-fit:cover;" /><!---->
+
+<form id="uploadForm" enctype="multipart/form-data" method="post" action="/api/ImageUploadApi/upload" class="d-flex flex-column align-items-center">
+    <div class="mb-3">
+        <label class="form-label" for="fileInput"></label>
+        <input class="form-control" type="file" id="fileInput" name="file" accept="image/*" style="max-width: 400px;" required />
+    </div>
+    <button class="btn btn-warning mt-3" type="submit" >上傳大頭貼</button>
+</form>
+
+<form id="editProfileForm" method="post" action="/Member/EditProfile">
+    <div class="section mb-4 bg-white p-4 rounded shadow-sm" id="section-profile">
+        @Html.AntiForgeryToken()  <!--防CSRF攻擊-->
+        <!--下面這用來保住若編輯失敗時的原有大頭照-->
+        <input type="hidden" name="ProfilePictureUrl" id="ProfilePictureUrl" value="@Model.ProfilePictureUrl" />
+
+        <h4>基本資料</h4>
+        <!-- 桌遊偏好 -->
+        <div class="mb-3">
+            
+            <label for="category-select" class="form-label">桌遊偏好</label>
+            <select id="category-select" class="form-select">
+                <option value="">請選擇...</option>
+                <option value="策略類">策略類</option>
+                <option value="派對類">派對類</option>
+                <option value="合作類">合作類</option>
+                <option value="家庭類">家庭類</option>
+            </select>
+            <div id="selected-tags" class="mt-2 d-flex flex-wrap gap-2"></div>
+            <input type="hidden" name="BoardGameTags" id="hidden-tags" />
+        </div>
+
+        <!-- 所在縣市 -->
+        <div class="mb-3">
+            <label class="form-label">所在縣市</label>
+            <select name="City" class="form-select">
+                <option value="">請選擇縣市...</option>
+                <option value="台北市" selected="@(Model.City == "台北市" ? "selected" : null)">台北市</option>
+                <option value="新北市" selected="@(Model.City == "新北市" ? "selected" : null)">新北市</option>
+                <option value="基隆市" selected="@(Model.City == "基隆市" ? "selected" : null)">基隆市</option>
+                <option value="桃園市" selected="@(Model.City == "桃園市" ? "selected" : null)">桃園市</option>
+                <option value="新竹市" selected="@(Model.City == "新竹市" ? "selected" : null)">新竹市</option>
+                <option value="新竹縣" selected="@(Model.City == "新竹縣" ? "selected" : null)">新竹縣</option>
+                <option value="苗栗縣" selected="@(Model.City == "苗栗縣" ? "selected" : null)">苗栗縣</option>
+                <option value="台中市" selected="@(Model.City == "台中市" ? "selected" : null)">台中市</option>
+                <option value="彰化縣" selected="@(Model.City == "彰化縣" ? "selected" : null)">彰化縣</option>
+                <option value="南投縣" selected="@(Model.City == "南投縣" ? "selected" : null)">南投縣</option>
+                <option value="雲林縣" selected="@(Model.City == "雲林縣" ? "selected" : null)">雲林縣</option>
+                <option value="嘉義市" selected="@(Model.City == "嘉義市" ? "selected" : null)">嘉義市</option>
+                <option value="嘉義縣" selected="@(Model.City == "嘉義縣" ? "selected" : null)">嘉義縣</option>
+                <option value="台南市" selected="@(Model.City == "台南市" ? "selected" : null)">台南市</option>
+                <option value="高雄市" selected="@(Model.City == "高雄市" ? "selected" : null)">高雄市</option>
+                <option value="屏東縣" selected="@(Model.City == "屏東縣" ? "selected" : null)">屏東縣</option>
+                <option value="宜蘭縣" selected="@(Model.City == "宜蘭縣" ? "selected" : null)">宜蘭縣</option>
+                <option value="花蓮縣" selected="@(Model.City == "花蓮縣" ? "selected" : null)">花蓮縣</option>
+                <option value="台東縣" selected="@(Model.City == "台東縣" ? "selected" : null)">台東縣</option>
+                <option value="澎湖縣" selected="@(Model.City == "澎湖縣" ? "selected" : null)">澎湖縣</option>
+                <option value="金門縣" selected="@(Model.City == "金門縣" ? "selected" : null)">金門縣</option>
+                <option value="連江縣" selected="@(Model.City == "連江縣" ? "selected" : null)">連江縣</option>
+            </select>
+        </div>
+
+        <!-- 暱稱 -->
+        <div class="mb-3">
+            <label class="form-label">暱稱</label>           
+            <input type="text" class="form-control" name="DisplayName" value="@Model.DisplayName" placeholder="請輸入暱稱(最多十個字元)" maxlength="10"/>
+        </div>
+
+        <!-- 自我介紹 -->
+        <div class="mb-3">
+            <label class="form-label">自我介紹</label>
+            <textarea name="Bio" rows="4" class="form-control" placeholder="我是桌遊愛好者～歡迎揪團！">@Model.Bio</textarea>
+        </div>
+
+        <hr />
+
+        <h5>修改密碼</h5>
+        <div class="mb-3">
+            <label class="form-label">舊密碼</label>
+            <input name="OldPassword" type="password" class="form-control" />
+            @Html.ValidationMessage("OldPassword", "", new { @class = "text-danger" })
+        </div>
+        <div class="mb-3" >
+            <label class="form-label">新密碼</label>
+            <input id="NewPassword" name="NewPassword" type="password" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">確認新密碼</label>           
+            <input id="ConfirmPassword" name="ConfirmPassword" type="password" class="form-control" />
+            <span id="ErrorMessage"></span>
+            @* @Html.ValidationMessage("ConfirmPassword", "", new { @class = "text-danger" }) *@
+        </div>
+       
+
+        <hr />
+
+        @* <h5>第三方帳號綁定</h5>
+        <div class="d-flex gap-3">
+            <div class="social-btn google w-100">Google（未綁定）</div>
+            <div class="social-btn facebook w-100">Facebook（未綁定）</div>
+        </div> *@
+
+        <button type="button" onclick="saveEdit()" class="btn btn-primary mt-4">儲存編輯</button>
+    </div>
+</form>
+
+
+
+<style>
+    .badge {
+        font-size: 1em;
+        cursor: pointer;
+    }
+
+    .btn-close {
+        margin-left: 0.5em;
+    }
+</style>
+
+

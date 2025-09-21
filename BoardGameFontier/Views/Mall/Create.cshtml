@@ -1,0 +1,83 @@
+﻿@model BoardGameFontier.Repostiory.Entity.Merchandise
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>新建商品資料</h1>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="GameDetailId" class="control-label">產品名稱</label>
+                <select asp-for="GameDetailId" class="form-control" asp-items="ViewBag.GameDetailId"></select>
+                <span asp-validation-for="GameDetailId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CoverURL" class="control-label"></label>
+                <input asp-for="CoverURL" class="form-control" />
+                <span asp-validation-for="CoverURL" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ImageGalleryJson" class="control-label"></label>
+                <input asp-for="ImageGalleryJson" class="form-control" />
+                <span asp-validation-for="ImageGalleryJson" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label">產品介紹</label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Brand" class="control-label">品牌</label>
+                <input asp-for="Brand" class="form-control" />
+                <span asp-validation-for="Brand" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Price" class="control-label">建議售價</label>
+                <input asp-for="Price" class="form-control" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DiscountPrice" class="control-label">特價</label>
+                <input asp-for="DiscountPrice" class="form-control" />
+                <span asp-validation-for="DiscountPrice" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Stock" class="control-label">庫存量</label>
+                <input asp-for="Stock" class="form-control" />
+                <span asp-validation-for="Stock" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Category" class="control-label">類型</label>
+                <select asp-for="Category">
+                    <option value="家庭遊戲">家庭遊戲</option>
+                    <option value="派對遊戲">派對遊戲</option>
+                    <option value="兒童遊戲">兒童遊戲</option>
+                    <option value="玩家遊戲">玩家遊戲</option>
+                    <option value="卡牌遊戲">卡牌遊戲</option>
+                    <option value="雙人遊戲">雙人遊戲</option>
+                    <option value="周邊產品">周邊產品</option>
+                </select>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
+                </label>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

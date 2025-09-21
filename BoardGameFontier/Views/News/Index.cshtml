@@ -1,0 +1,188 @@
+﻿@section Styles{
+    <style>
+        .news-list-item {
+            height: 22vh;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: rgba(20, 184, 166, 0.2) solid 0.5px;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .news-list-item:hover {
+            background-color: rgba(20, 184, 166, 0.4);
+        }
+        .object-fit-cover {
+            object-fit: cover;
+            height: 19vh;
+            width: 100%;
+            display: block;
+        }
+
+        ol, ul {
+            padding-left: 0rem;
+        }
+
+        .top-bar{
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            box-shadow: 0 4px 16px rgba(20, 184, 166, 0.1);
+            gap: 1rem;
+        }
+
+        .category-tab.active {
+            background: #14b8a6;
+            color: white;
+            box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+        }
+
+        .category-tab {
+            padding: 8px 16px;
+            border: 1px solid rgba(20, 184, 166, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #14b8a6;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+    </style>
+    @* <link rel="stylesheet" href="~/css/community.css?v=@DateTime.Now.Ticks" /> *@
+}
+<div class="container-fluid">
+    <div class="row mt-3">
+        <div class="col-3">
+            <partial name="~/Views/Shared/Partials/_CommunityLeftSidebar.cshtml" />
+        </div>
+        <div id="newsPanel" class="col-9">
+
+            <div class="top-bar mb-4 ">
+                <button class="category-tab btn" :class="{ active: activeTab === 'all' }" @@click="switchTab('all')">綜合報導</button>
+                <button class="category-tab btn" :class="{ active: activeTab === 'news' }" @@click="switchTab('news')">遊戲趣聞</button>
+                <button class="category-tab btn" :class="{ active: activeTab === 'game' }" @@click="switchTab('game')">新品速報</button>
+                <button class="category-tab btn" :class="{ active: activeTab === 'campaign' }" @@click="switchTab('campaign')">實體活動</button>
+                <button class="category-tab btn" :class="{ active: activeTab === 'announcement' }" @@click="switchTab('announcement')">系統公告</button>
+            </div>
+
+            <ul>
+                <template v-if="newsIsLoading">
+                    <li class="news-list-item p-3 mb-3 border rounded d-flex align-items-start shadow-sm" v-for="i in 10">
+                        <div class="me-3 spinner-grow text-secondary"></div>
+                        <div class="flex-grow-1 d-flex flex-column">
+                            <div class="d-flex align-items-center placeholder-glow">
+                                <h4 class="fw-bold mb-2 placeholder col-6"></h4>
+                            </div>
+                            <p class="content placeholder-glow">
+                                <span class="placeholder col-7"></span>
+                                <span class="placeholder col-4"></span>
+                                <span class="placeholder col-4"></span>
+                                <span class="placeholder col-6"></span>
+                                <span class="placeholder col-8"></span>
+                            </p>
+                            <div class="justify-content-between align-items-center mt-2 placeholder-glow">
+                                <div class="btn btn-sm btn-primary placeholder col-12 bg-primary"></div>
+                                <small class="text-muted placeholder col-4">
+                                </small>
+                            </div>
+                        </div>
+                    </li>
+                </template>
+                <template v-else>
+                <li class="news-list-item p-3 mb-3 border rounded d-flex align-items-start shadow-sm" v-for="item in formatter">
+                    <!-- 封面圖 -->
+                    <div class="flex-shrink-0 me-3" style="width: 220px; overflow: hidden; margin:-0.5em;">
+                        <img :src="item.coverURL" alt="item.title" class="img-fluid rounded object-fit-cover">
+                    </div>
+
+                    <!-- 文字內容 -->
+                    <div class="flex-grow-1 d-flex flex-column">
+                        <div class="d-flex align-items-center">
+                            <div class="fw-bold mb-1" style="font-size:1.4rem">{{item.title}} <span class="badge bg-danger">{{item.category}}</span></div>
+                        </div>
+                            <p style="font-size: 1.2rem;">{{item.content.replace(/<[^>]*>/g, '').slice(0, 60) + '...'}}<a :href="`/News/Detail/${item.id}`" class="text-success">繼續閱讀</a></p>
+                        <!-- 底部資訊 -->
+                        @* <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">
+                                👁️ {{item.pageView}}　👏 {{item.Claps}}
+                            </small>
+                        </div> *@
+                    </div>
+                </li>
+                </template>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+    var app = Vue.createApp({
+            data(){
+                return {
+                    news:[],
+                    activeTab: 'all',
+                    newsIsLoading:true,
+                    activeTab: 'all',
+                }
+            },
+            computed: {
+                formatter() {
+                    const list = this.news[this.activeTab] || [];
+                    return list.map(x => {
+                        return {
+                            id: x.id,
+                            content: this.limitContentLength(x.content.replace(/<[^>]*>/g, '')),
+                            coverURL: x.coverURL,
+                            title: x.title,
+                            category: x.category
+                        };
+                    });
+                }
+            },
+            methods:{
+                switchTab(tabName) { this.activeTab = tabName;this.getNews(tabName); },
+                limitContentLength(content){
+                    if(content.length > 70){
+                        return content.substring(0, 60) + "...";
+                    }
+                    return content;
+                },
+                detemineCategory(category){
+                    switch (category){
+                        case "新品速報":
+                        return "btn-danger"; break;
+                        case "實體活動":
+                        return "btn-waring"; break;
+                        case "遊戲趣聞":
+                        return "btn-secondary"; break;
+                        case "系統公告":
+                        return "btn-info"; break;
+                    }
+                },
+                getNews(category = 'all') {
+                    if (this.news[category]) return;
+                    this.newsIsLoading = true;
+                    fetch(`/api/news/getnews?category=${category}`)
+                        .then(res => res.json())
+                        .then(data => this.news[category] = data)
+                        .finally(() => this.newsIsLoading = false)
+                }
+            },
+            mounted(){
+                this.getNews('all');
+            }
+        });
+
+        app.mount("#newsPanel");
+    </script>
+}

@@ -1,0 +1,85 @@
+﻿@model List<MallManageViewModel>
+@{
+    ViewData["Title"] = "商城管理";
+}
+<div class="min-vh-100 bg-light">
+    <div class="container-fluid">
+        <div class="row d-flex flex-grow-1">
+            <!-- 側邊選單 -->
+            @Html.Partial("_AdminSidebar")
+
+            <!-- 主內容 -->
+            <main id="postApp" class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- 發文清單 -->
+                <div class="card mb-4">
+                        <div class="container mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h2>商品管理</h2>
+                                <a class="btn btn-success" asp-controller="Mall" asp-action="Create">
+                                    <i class="bi bi-plus-circle"></i> 新增商品
+                                </a>
+                            </div>
+
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width:80px;">封面</th>
+                                                <th>品名</th>
+                                                <th style="width:120px;">價格</th>
+                                                <th style="width:120px;">特價</th>
+                                                <th style="width:120px;">庫存</th>
+                                                <th style="width:120px;">分類</th>
+                                                <th style="width:100px;">狀態</th>
+                                                <th style="width:160px;">上架時間</th>
+                                                <th style="width:150px;">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in Model)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <img src="@item.CoverURL" class="img-thumbnail rounded" style="width:60px; height:60px; object-fit:cover;" />
+                                                    </td>
+                                                    <td>@item.Name</td>
+                                                    <td>$@item.Price</td>
+                                                    <td>$@item.Discount</td>
+                                                    <td>$@item.Stock</td>
+                                                    <td>@item.Category</td>
+                                                    <td>
+                                                        @if (item.IsActive)
+                                                        {
+                                                            <span class="badge bg-success">上架</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">下架</span>
+                                                        }
+                                                    </td>
+                                                    <td>@item.CreatAt.ToString("yyyy/MM/dd HH:mm")</td>
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            <a class="btn btn-sm btn-primary" asp-controller="Mall" asp-action="Edit" asp-route-id="@item.Id">
+                                                                <i class="bi bi-pencil"></i> 修改
+                                                            </a>
+                                                            <a class="btn btn-sm btn-danger" asp-controller="Mall" asp-action="Delete" asp-route-id="@item.Id">
+                                                                <i class="bi bi-trash"></i> 刪除
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>

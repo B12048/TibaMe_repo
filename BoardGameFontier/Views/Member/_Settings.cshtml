@@ -1,0 +1,23 @@
+﻿@model PrivacySettingsViewModel
+
+<div class="p-4">
+    <h4 class="mb-3">隱私設定</h4>
+
+    <form id="privacyForm">
+        @Html.AntiForgeryToken()
+
+        <div class="form-check form-switch fs-5 ms-1 mb-2">
+            <!--privacy-toggle 這用來讓JS好呼叫到的className(有多個欄位時好用)-->
+            <input class="form-check-input privacy-toggle" type="checkbox" id="toggleCity" name="IsCityHide"
+                   @(Model.IsCityHide ? "checked" : "")> <!--預設為公開(按鈕未開啟狀態)-->
+            <label class="form-check-label" for="toggleCity">隱藏居住城市</label>
+        </div>
+
+        <div class="form-check form-switch fs-5 ms-1">
+            <input class="form-check-input privacy-toggle" type="checkbox" id="toggleProfile" name="IsProfileHide"
+                   @(Model.IsProfileHide ? "checked" : "")> <!--預設為公開(按鈕未開啟狀態)-->
+            <label class="form-check-label" for="toggleProfile">隱藏個人資訊</label>
+        </div>
+    </form>
+    
+</div>

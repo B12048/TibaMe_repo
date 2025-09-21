@@ -1,0 +1,91 @@
+﻿@model News
+<body class="min-vh-100 bg-light">
+    <div class="container-fluid">
+        <div class="row d-flex flex-grow-1">
+            <!-- 側邊選單 -->
+            @Html.Partial("_AdminSidebar")
+
+            <!-- 主內容 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="card">
+                    <div class="card-header">修改文章</div>
+                    <div class="card-body">
+                        <form asp-action="Edit" method="post">
+                            <div class="mb-3">
+                                <label asp-for="Title" class="form-label">新聞標題</label>
+                                <input asp-for="Title" class="form-control" placeholder="請輸入新聞的標題" />
+                                <span asp-validation-for="Title" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="category" class="form-label">分類</label>
+                                <select asp-for="category" class="form-select" id="category">
+                                    <option value="系統公告">系統公告</option>
+                                    <option value="遊戲新聞">遊戲趣聞</option>
+                                    <option value="實體活動">實體活動</option>
+                                    <option value="新品速報">新品速報</option>
+                                </select>
+                                <span asp-validation-for="category" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Content" class="control-label">內容</label>
+                                <textarea asp-for="Content" class="form-control" row="10" id="editor"></textarea>
+                                <span asp-validation-for="Content" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="CoverURL" class="form-label">封面圖片</label>
+                                <input asp-for="CoverURL" class="form-control" type="text" id="image">  @*type應該要用file，但先用text測試功能*@
+                                <span asp-validation-for="Content" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="status" class="form-label">狀態</label>
+                                <select asp-for="status" class=" form-select" id="status">
+                                    <option value="草稿">草稿</option>
+                                    <option value="已發佈">已發佈</option>
+                                    <option value="排程發佈">排程發佈</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Created" class="form-label">發布時間（如排程）</label>
+                                <input asp-for="Created" type="datetime-local" class="form-control" id="scheduleTime">
+                            </div>
+                            <div class="form-check mb-3">
+                                <input asp-for="pinTop" class="form-check-input" type="checkbox" id="pinTop">
+                                <label asp-for="pinTop" class="form-check-label" for="pinTop">置頂此文章</label>
+                            </div>
+                            <button type="submit" class="btn btn-success">儲存變更</button>
+                            <a asp-controller="Admin" asp-action="Publish" class="btn btn-secondary">取消</a>
+                        </form>
+                    </div>
+</div>
+            </main>
+        </div>
+    </div>
+</body>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.ckeditor.com/ckeditor5/29.2.0/classic/ckeditor.js"></script>
+    <script>
+        let editor;
+
+        ClassicEditor
+            .create(document.querySelector('#editor'))
+            .then(newEditor => {
+                editor = newEditor;
+            })
+            .catch(error => {
+                console.error(error);
+            });
+
+        $("form").on("submit", function (e) {
+            const contentHtml = editor.getData();
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = contentHtml;
+
+            const firstImg = tempDiv.querySelector("img");
+            if (firstImg) {
+                const firstImgSrc = firstImg.getAttribute("src");
+                $("#Cover").val(firstImgSrc);
+            }
+        });
+    </script>
+}

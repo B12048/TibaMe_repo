@@ -1,0 +1,63 @@
+﻿@model News
+
+<body class="min-vh-100 bg-light">
+    <div class="container-fluid">
+        <div class="row d-flex flex-grow-1">
+            <!-- 側邊選單 -->
+            @Html.Partial("_AdminSidebar")
+
+            <!-- 主內容 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div class="card">
+    <div class="card-header">刪除文章</div>
+    <div class="card-body">
+        <form asp-action="Delete" method="post">
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label">新聞標題</label>
+                <input disabled="true" asp-for="Title" class="form-control" placeholder="請輸入新聞的標題" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="category" class="form-label">分類</label>
+                <select disabled ="true" asp-for="category" class="form-select" id="category">
+                    <option>公告</option>
+                    <option>新聞</option>
+                    <option>活動</option>
+                </select>
+                <span asp-validation-for="category" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Content" class="control-label">內容</label>
+                <textarea disabled="true"  asp-for="Content" class="form-control" row="10" id="editor"></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="CoverURL" class="form-label">封面圖片</label>
+                <input disabled="true"  asp-for="CoverURL" class="form-control" type="file" id="image">
+                <span asp-validation-for="Content" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="status" class="form-label">狀態</label>
+                <select disabled="true"  asp-for="status" class=" form-select" id="status">
+                    <option value="draft">存成草稿</option>
+                    <option value="published">現已發佈</option>
+                    <option value="scheduled">排程發佈</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Created" class="form-label">發布時間（如排程）</label>
+                <input disabled="true" asp-for="Created" type="datetime-local" class="form-control" id="scheduleTime">
+            </div>
+            <div class="form-check mb-3">
+                <input disabled="true" asp-for="pinTop" class="form-check-input" type="checkbox" id="pinTop">
+                <label asp-for="pinTop" class="form-check-label" for="pinTop">置頂此文章</label>
+            </div>
+            <button type="submit" class="btn btn-success">確定刪除</button>
+            <a asp-controller="Admin" asp-action="Publish" class="btn btn-secondary">取消</a>
+        </form>
+    </div>
+</div>
+            </main>
+        </div>
+    </div>
+</body>

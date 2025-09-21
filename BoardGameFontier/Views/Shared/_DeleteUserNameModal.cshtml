@@ -1,0 +1,26 @@
+﻿
+
+<!--這邊決定關鍵字用Account不用UserName，怕誤解-->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="deleteAccountModalLabel">確定要刪除帳號？</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+            <div class="modal-body">
+                此操作將<strong>永久刪除</strong>您的帳號，且無法復原。<br>
+                您確定要刪除帳號嗎？
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <!--這邊按下確定後才刪除-->
+                <form id="deleteAccountForm" method="post" action="/Member/DeleteAccount">
+                    @Html.AntiForgeryToken()                    <!--這邊路徑到時候看如何要改-->
+                    <button type="submit" class="btn btn-danger">確定刪除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
